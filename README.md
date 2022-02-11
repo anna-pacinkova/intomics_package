@@ -1,4 +1,4 @@
-# IntOMICS: an R package for integrative analysis of multi-omics data to infer regulatory networks.
+# IntOMICS: an R package for integrative analysis of~multi-omics data to infer regulatory networks.
 
 We present IntOMICS, an efficient integrative framework based on Bayesian networks. 
 IntOMICS systematically analyses gene expression, DNA methylation, copy number variation and biological prior knowledge to infer regulatory networks. 
