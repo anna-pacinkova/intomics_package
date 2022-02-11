@@ -1,0 +1,19 @@
+Package: IntOMICS
+Type: Package
+Title: Integrative analysis of multi-omics data to infer regulatory networks.
+Version: 0.0.1
+Authors@R: person("Pacinkova", "Anna", email = "ana.pacinkova@gmail.com", role = c("cre","aut"))
+Maintainer: Anna Pacinkova <ana.pacinkova@gmail.com>
+URL: https://gitlab.ics.muni.cz/bias/intomics_package
+Description: IntOMICS systematically analyse gene expression, copy number variation, DNA methylation and biological prior knowledge in order to infer regulatory networks. IntOMICS complements the missing biological prior knowledge by so-called empirical biological prior knowledge, which is estimated from the available experimental data. IntOMICS framework takes as input (i) gene expression matrix GE with m samples and n genes, (ii) the associated copy number variation matrix CNV sampled from the same individuals, (iii) the associated DNA methylation matrix METH sampled from the same individuals, and (iv) the biological prior knowledge matrix B with information on known interactions among molecular features (from publicly availabe databases). An automatically tuned MCMC algorithm (Yang and Rosenthal, 2017) is used to estimate parameters and empirical biological prior knowledge. Conventional MCMC algorithm with additional Markov blanket resampling step is used to infer resulting regulatory network structure consisting of three types of nodes: GE nodes refer to gene expression levels, CNV nodes refer to copy number variations, and METH nodes refer to methylation. Edge weight wi represents the empirical frequency of given edge over resulting samples of network structures.
+Depends: R (>= 4.0.0)
+Imports: bnlearn, bnstruct, rlist, matrixStats, parallel, ggraph, dplyr, sm, tibble, RColorBrewer, rstatix, gridExtra, bestNormalize, igraph
+License: GPL-3
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+VignetteBuilder: knitr
+RoxygenNote: 7.1.2
+LazyData: true
+Suggests: 
+    rmarkdown,
+    knitr
