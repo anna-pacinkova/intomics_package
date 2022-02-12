@@ -17,3 +17,4 @@ consisting of three types of nodes: GE nodes refer to gene expression levels, CN
 Edge weight wi represents the empirical frequency of given edge over samples of network structures.
 
 For further details, see manuscript Pacinkova \& Popovici, DOI:10.21203/rs.3.rs-1291540/v1.
+Comprehensive tutorial: vignettes/IntOMICS_vignette.Rmd
