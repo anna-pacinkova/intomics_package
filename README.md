@@ -16,5 +16,5 @@ Conventional MCMC algorithm with additional Markov blanket resampling step (Su a
 consisting of three types of nodes: GE nodes refer to gene expression levels, CNV nodes refer to copy number variations, and METH nodes refer to DNA methylation. 
 Edge weight wi represents the empirical frequency of given edge over samples of network structures.
 
-For further details, see manuscript Pacinkova \& Popovici, DOI:10.21203/rs.3.rs-1291540/v1.
+For further details, see manuscript Pacinkova \& Popovici, DOI:10.21203/rs.3.rs-1291540/v1.  
 Comprehensive tutorial: vignettes/IntOMICS_vignette.Rmd
