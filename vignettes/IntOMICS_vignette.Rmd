@@ -55,7 +55,7 @@ The example dataset is from the TCGA data portal (https://portal.gdc.cancer.gov/
 We choose the set of 7 genes from the KEGG Colorectal cancer pathway (https://www.genome.jp/pathway/hsa05210).
 
 
-```{r setup, include = TRUE, eval=FALSE}
+```{r include = TRUE, echo = TRUE}
 
 library(knitr)
 library(IntOMICS)
@@ -63,27 +63,11 @@ library(bestNormalize)
 library(foreach)
 library(bnlearn)
 library(RColorBrewer)
-library(igraph)
-library(ggraph)
 library(png) 
 library(matrixStats)
-library(bnstruct)
-
-```
-
-```{r, include = FALSE}
-
-library(knitr)
-library(IntOMICS)
-library(bestNormalize)
-library(foreach)
-library(bnlearn)
-library(RColorBrewer)
-library(igraph)
-library(ggraph)
-library(png) 
-library(matrixStats)
-library(bnstruct)
+suppressMessages(library(igraph))
+suppressMessages(library(ggraph))
+suppressMessages(library(bnstruct))
 
 ```
 
