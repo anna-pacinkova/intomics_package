@@ -226,13 +226,16 @@ lm_meth <- function(ge_mat, meth_mat, gene, meth_probes, r_squared_thres)
     for(f in c(1:length(meth_probes)))
     {
       res <- lm(ge_mat[,gene] ~ meth_mat[,meth_probes[f]])
-      cond1 <- summary(res)$coefficients[2,"Pr(>|t|)"] < 0.05
-      cond2 <- summary(res)$r.squared > r_squared_thres
-      cond3 <- shapiro.test(summary(res)$resid)$p.value > 0.1
-      if(cond1 & cond2 & cond3)
+      if(nrow(summary(res)$coefficients)>1)
       {
-        meth_probes_sig <- c(meth_probes_sig, meth_probes[f])
-      } # end if(cond1 & cond2 & cond3)
+        cond1 <- summary(res)$coefficients[2,"Pr(>|t|)"] < 0.05
+        cond2 <- summary(res)$r.squared > r_squared_thres
+        cond3 <- shapiro.test(summary(res)$resid)$p.value > 0.1
+        if(cond1 & cond2 & cond3)
+        {
+          meth_probes_sig <- c(meth_probes_sig, meth_probes[f])
+        } # end if(cond1 & cond2 & cond3)
+      } # end if(nrow(summary(res)$coefficients)>1)
     } # end for f
   } # end if(length(meth_probes)>0)
   
