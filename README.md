@@ -98,7 +98,7 @@ If methylation data are available, we have to provide an annotation:
 str(annot)
 </code></pre>
 
-annot is a named list. Each component of the list is a character vector and corresponds to probe IDs associated with a given gene. Names of the annot must be again in the format ENTREZID:XXXX.  
+\texttt{annot} is a named list. Each component of the list is a character vector and corresponds to probe IDs associated with a given gene. Names of the annot must be again in the format ENTREZID:XXXX.  
 
 To generate comprehensive figures with gene IDs, we need to provide a gene annotation table:
 <pre><code>
