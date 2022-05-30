@@ -70,6 +70,7 @@ Available omics data in the example TCGA COAD MSI dataset are gene expression (G
 
 <pre><code>
 omics$ge[1:5,1:5]
-<code><pre>
+</code></pre>
+
 
 Comprehensive tutorial: vignettes/IntOMICS_vignette.Rmd
