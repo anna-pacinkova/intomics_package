@@ -26,7 +26,7 @@ library(devtools)</code></pre>
 
 
 
-![Image](anna-pacinkova/intomics_package/figures/IntOMICS_framework_METH_empB.png) 
+![Image](anna-pacinkova/intomics_package/vignettes/figures/IntOMICS_framework_METH_empB.png) 
 
 
 Comprehensive tutorial: vignettes/IntOMICS_vignette.Rmd
