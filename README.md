@@ -18,9 +18,10 @@ Edge weight wi represents the empirical frequency of given edge over samples of 
 
 
 ## Installation
+<pre><code>install_github("anna-pacinkovay/intomics_package")  
+library(devtools)</code></pre>
 
-library(devtools)
-install_github("anna-pacinkovay/intomics_package")
+
 
 
 ## Summary
