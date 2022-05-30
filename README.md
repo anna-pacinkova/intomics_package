@@ -58,14 +58,18 @@ IntOMICS framework takes as input:
   
 * gene expression matrix $GE$ ($m$ x $n_1$) with microarray intensities or RNA-seq count data transformed into a continuous domain ($m$ samples and $n_1$ features)
   
-* associated copy number variation matrix $CNV$ ($m$ x $n_2$) with continuous segment mean values derived for each gene ($n_2 \leq n_1$),
+* associated copy number variation matrix $CNV$ ($m$ x $n_2$) with continuous segment mean values derived for each gene ($m$ samples and $n_2$ features, $n_2 \leq n_1$),
   
-* associated DNA methylation matrix of beta-values $METH$ ($m$ x $n_3$),
+* associated DNA methylation matrix of beta-values $METH$ ($m$ samples and $n_3$ features, $m$ x $n_3$),
   
-* data.frame including all known interactions between molecular features (information from public available databases such as KEGG (Ogata et al., 1999) or REACTOME (Wu \& Haw, 2017)). However, any other source of prior knowledge can be used.  
+* data.frame including all known interactions between molecular features (information from public available databases such as KEGG ([Ogata et al., 1999](https://academic.oup.com/nar/article/27/1/29/1238108?login=true)) or REACTOME ([Wu \& Haw, 2017](https://link.springer.com/protocol/10.1007/978-1-4939-6783-4_11))). However, any other source of prior knowledge can be used.  
   
 All data matrices are sampled from the same individuals.  
 
 Available omics data in the example TCGA COAD MSI dataset are gene expression (GE) of 7 genes + copy number variation (CNV) of 7 genes + beta value of 115 DNA methylation (METH) probes:
+
+<pre><code>
+omics$ge[1:5,1:5]
+<code><pre>
 
 Comprehensive tutorial: vignettes/IntOMICS_vignette.Rmd
