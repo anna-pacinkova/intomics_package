@@ -115,5 +115,78 @@ PK
 PK is the data.frame with biological prior knowledge. Column names are "src_entrez" (the parent node), "dest_entrez" (the child node) and "edge_type" (the prior knowledge about the direct interaction between parent and child node; the allowed values are "present" or "missing").
 
 
+## Part 2: Data preprocessing
+
+The first step is to define the biological prior matrix and estimate the upper bound of the partition function needed to define the prior distribution of network structures.
+We also need to define all possible parent set configurations for each node.  For each parent set configuration, we compute the energy (needed to define the prior distribution of network structures) and the BGe score (needed to determine the posterior probability of network structures).
+These functionalities are available through the \texttt{OMICS\_module()} function.  
+We can use linear regression to filter irrelevant DNA methylation probes. We set the parameter lm_METH = TRUE (default lm_METH = TRUE).
+We can also specify the threshold for the R^2 to choose DNA methylation probes with significant coefficient using the r_squared_thres (default = 0.3).
+<pre><code>
+OMICS_module_res <- OMICS_module(omics = omics, PK = PK, layers_def = layers_def, annot = annot, r_squared_thres = 0.3, lm_METH = TRUE)
+</code></pre>
+
+These DNA methylation probes passed the filter:
+<pre><code>
+OMICS_module_res$annot
+</code></pre>
+
+
+## Part 3: MCMC simulation
+
+Now, we can use the automatically tuned MCMC algorithm (Yang and Rosenthal, 2017) to estimate model parameters and empirical biological knowledge and the conventional MCMC algorithm with additional Markov blanket resampling step (Su and Borsuk, 2016) to infer regulatory network structure consisting of three types of nodes: GE, CNV and METH nodes. 
+This step can be time-consuming (you can skip it and use the pre-computed result -> R object BN_module_res).
+<pre><code>
+BN_module_res <- BN_module(burn_in = 100000, 
+                           thin = 500, 
+                           seed1 = 1001,
+                           seed2 = 2002,
+                           OMICS_module_res = OMICS_module_res,
+                           minseglen = 50000)
+</code></pre>
+
+
+## Part 4: MCMC diagnostics
+
+Now we have to create a directory to store trace plots. 
+Once it is created, we can run the trace_plots function, which generates:  
+  
+1. beta_values.svg: trace plot of beta values (we want to explore the sample space many times and avoid flat bits - the chain stays in the same state for too long)  
+  
+2. post_prob_edges.svg: consistency of edges posterior probabilities in two independent MCMC simulations (scatter plot of the edge weights confidence using two independent MCMC runs; the convergence is determined by the spread of the points around the y=x line)   
+  
+3. convergence_RMS.svg: the c_{rms} strength for the convergence evaluation (summarizes the spread of the points around the line y=x in post_prob_edges.svg, for details see (Agostinho et al., 2015 and Pacinkova \& Popovici, 2022)).  
+  
+The parameter edge_freq_thres determines the quantile of all edge weights used to filter only reliable edges.
+The parameter gene_ID determines the IDs used in the final network. There are two options: 'gene_symbol' (default) or 'entrezID'.
+<pre><code>
+res_weighted <- trace_plots(mcmc_res = BN_module_res, figures_dir = "figures/MSI/", burn_in = 100000, thin = 500, gene_annot = gene_annot, PK = PK, OMICS_module_res = OMICS_module_res, gene_ID = "gene_symbol", edge_freq_thres = 0.75)
+</code></pre>
+
+
+## Part 5: IntOMICS resulting network structure
+
+<pre><code>
+ggraph(res_weighted$net_weighted, layout = 'dh') + 
+  geom_edge_link(aes(end_cap = circle(node2.degree + 7, "pt"), edge_color = edge, label = weight),
+                 arrow = arrow(angle = 20, length = unit(0.1, "inches"),
+                              ends = "last", type = "closed"))+
+  geom_node_point(aes(color = factor(color)), size = 10) +
+  scale_colour_manual(values = res_weighted$node_palette, guide = "none")+
+  geom_node_text(aes(label = label),family="serif")
+</code></pre>
+
+Edges highlighted in green are known from the biological prior knowledge. 
+GE node names are in upper case, CNV node names are in lower case, METH node names are the same as DNA methylation probe names in omics$meth matrix.  
+
+Node colours legend:
+<pre><code>
+legend_custom(net = res_weighted)
+</code></pre>
+  
+Node colour scales are given by GE/CNV/METH values of all features from the corresponding input data matrix.  
+
+
+If you find a bug or have a comment let us know, please, via an e-mail: ana.pacinkova@gmail.com
 
 
