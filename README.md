@@ -16,5 +16,24 @@ Conventional MCMC algorithm with additional Markov blanket resampling step (Su a
 consisting of three types of nodes: GE nodes refer to gene expression levels, CNV nodes refer to copy number variations, and METH nodes refer to DNA methylation. 
 Edge weight wi represents the empirical frequency of given edge over samples of network structures.
 
-For further details, see manuscript Pacinkova \& Popovici, DOI:10.21203/rs.3.rs-1291540/v1.  
+
+## Installation
+
+library(devtools)
+install_github("anna-pacinkovay/intomics_package")
+
+
+## Summary
+
+IntOMICS is an efficient integrative framework based on Bayesian networks.
+IntOMICS systematically analyses gene expression, copy number variation, DNA methylation, and biological prior knowledge to infer regulatory networks.
+IntOMICS complements the missing biological prior knowledge by so-called empirical biological knowledge, estimated from the available experimental data.
+An automatically tuned MCMC algorithm (Yang and Rosenthal, 2017) estimates model parameters and the empirical biological knowledge.
+Conventional MCMC algorithm with additional Markov blanket resampling step (Su and Borsuk, 2016) infers resulting regulatory network structure consisting of three types of nodes: GE nodes refer to gene expression levels, CNV nodes refer to associated copy number variations, and METH nodes refer to associated DNA methylation probe(s).
+The resulting regulatory network structure contains the edge weights $w_i$ representing the empirical frequency of given edge over samples of network structures from two independent MCMC simulations.
+For further details, see manuscript Pacinkova \& Popovici, [Using empirical biological knowledge to infer
+regulatory networks from multi-omics data](https://assets.researchsquare.com/files/rs-1291540/v1_covered.pdf?c=1643735189), DOI:10.21203/rs.3.rs-1291540/v1 . 
+![Image](figures/IntOMICS_framework_METH_empB.png) 
+
+
 Comprehensive tutorial: vignettes/IntOMICS_vignette.Rmd
