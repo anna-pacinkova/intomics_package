@@ -17,8 +17,11 @@ Conventional MCMC algorithm with additional Markov blanket resampling step (Su a
 consisting of three types of nodes: GE nodes refer to gene expression levels, CNV nodes refer to copy number variations, and METH nodes refer to DNA methylation. 
 The resulting regulatory network structure contains the edge weights $w_i$ representing the empirical frequency of given edge over samples of network structures from two independent MCMC simulations.
 
-![IntOMICS framework](vignettes/figures/IntOMICS_framework_METH_empB.png "IntOMICS framework")
-
+%![IntOMICS framework](vignettes/figures/IntOMICS_framework_METH_empB.png "IntOMICS framework")
+<img src="vignettes/figures/IntOMICS_framework_METH_empB.png"
+     alt="IntOMICS framework"
+     style="float: center; margin-right: 10px;" />
+     
 For further details, see manuscript [Pacinkova \& Popovici, 2022](https://assets.researchsquare.com/files/rs-1291540/v1_covered.pdf?c=1643735189), DOI:10.21203/rs.3.rs-1291540/v1. 
 
 
