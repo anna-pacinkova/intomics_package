@@ -38,8 +38,7 @@ The example dataset is from [the TCGA data portal](https://portal.gdc.cancer.gov
 We choose the set of 7 genes from the [KEGG Colorectal cancer pathway](https://www.genome.jp/pathway/hsa05210).
 
 
-## Part 1: Input data loading and preprocessing
-
+## Part 1: Input data
 <pre><code>
 library(knitr)
 library(IntOMICS)
@@ -72,5 +71,49 @@ Available omics data in the example TCGA COAD MSI dataset are gene expression (G
 omics$ge[1:5,1:5]
 </code></pre>
 
+These values correspond to normalised RNA-seq data. 
+However, the user is not limited to this platform. Another assay, such as microarray data, can be used. The column names of omics$ge matrix must be entrez ID in the format ENTREZID:XXXX.
 
-Comprehensive tutorial: vignettes/IntOMICS_vignette.Rmd
+<pre><code>
+omics$cnv[1:5,1:5]
+</code></pre>
+
+These copy number values represent segment mean values equal to $log_2(\frac{copy-number}{2})$.
+The column names of omics\$cnv matrix must be entrez ID in the format entrezid:XXXX.
+In the omics$cnv matrix, define only columns with available CNV data.
+
+
+<pre><code>
+omics$meth[1:5,1:5]
+</code></pre>
+
+These values represent DNA methylation beta values. The column names of the omics$meth matrix are probe IDs.  
+
+IntOMICS is designed to infer regulatory networks even if the copy number variation or DNA methylation data (or both) are not available.  
+
+
+If methylation data are available, we have to provide an annotation:
+
+<pre><code>
+str(annot)
+</code></pre>
+
+annot is a named list. Each component of the list is a character vector and corresponds to probe IDs associated with a given gene. Names of the annot must be again in the format ENTREZID:XXXX.  
+
+To generate comprehensive figures with gene IDs, we need to provide a gene annotation table:
+<pre><code>
+gene_annot
+</code></pre>
+
+gene_annot is Gene ID conversion table with "entrezID" and "gene_symbol" column names. Gene symbols are used for the final regulatory network visualisation.  
+
+And finally, the prior knowledge from any source chosen by the user:
+<pre><code>
+PK
+</code></pre>
+
+PK is the data.frame with biological prior knowledge. Column names are "src_entrez" (the parent node), "dest_entrez" (the child node) and "edge_type" (the prior knowledge about the direct interaction between parent and child node; the allowed values are "present" or "missing").
+
+
+
+
