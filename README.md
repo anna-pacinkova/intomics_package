@@ -24,9 +24,48 @@ The resulting regulatory network structure contains the edge weights $w_i$ repre
 For further details, see manuscript [Pacinkova \& Popovici, 2022](https://assets.researchsquare.com/files/rs-1291540/v1_covered.pdf?c=1643735189). 
 
 
-## Installation
-<pre><code>install_github("anna-pacinkova/intomics_package")  
-library(devtools)</code></pre>
+# Installation
 
+<pre><code>
+install_github("anna-pacinkova/intomics_package")  
+library(devtools)
+</code></pre>
+
+# Usage
+
+This tutorial will show you how to use the IntOMICS package with a toy example.
+The example dataset is from [the TCGA data portal](https://portal.gdc.cancer.gov/): 30 colon cancer samples (COAD) with microsatellite instability (MSI).
+We choose the set of 7 genes from the [KEGG Colorectal cancer pathway](https://www.genome.jp/pathway/hsa05210).
+
+
+## Part 1: Input data loading and preprocessing
+
+<pre><code>
+library(knitr)
+library(IntOMICS)
+library(bestNormalize)
+library(foreach)
+library(bnlearn)
+library(RColorBrewer)
+library(png) 
+library(matrixStats)
+suppressMessages(library(igraph))
+suppressMessages(library(ggraph))
+suppressMessages(library(bnstruct))
+</code></pre>
+
+IntOMICS framework takes as input:  
+  
+* gene expression matrix $GE$ ($m$ x $n_1$) with microarray intensities or RNA-seq count data transformed into a continuous domain ($m$ samples and $n_1$ features)
+  
+* associated copy number variation matrix $CNV$ ($m$ x $n_2$) with continuous segment mean values derived for each gene ($n_2 \leq n_1$),
+  
+* associated DNA methylation matrix of beta-values $METH$ ($m$ x $n_3$),
+  
+* data.frame including all known interactions between molecular features (information from public available databases such as KEGG (Ogata et al., 1999) or REACTOME (Wu \& Haw, 2017)). However, any other source of prior knowledge can be used.  
+  
+All data matrices are sampled from the same individuals.  
+
+Available omics data in the example TCGA COAD MSI dataset are gene expression (GE) of 7 genes + copy number variation (CNV) of 7 genes + beta value of 115 DNA methylation (METH) probes:
 
 Comprehensive tutorial: vignettes/IntOMICS_vignette.Rmd
