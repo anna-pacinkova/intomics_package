@@ -182,7 +182,8 @@ names(OMICS_module_res)
 #> "pf_UB_BGe_pre"       "B_prior_mat"         "annot"               "omics"               "layers_def"          "omics_meth_original"
 ```
 
-OMICS_module_res\$pf_UB_BGe_pre is a list that contains the upper bound of the partition function for hyperparameter $\beta = 0$ (OMICS_module_res\$pf_UB_BGe_pre\$partition_func_UB), all possible parent set combinations for given node (OMICS_module_res\$pf_UB_BGe_pre\$partition_func_UB), corresponding energy (OMICS_module_res$pf_UB_BGe_pre$partition_func_UB) and BGe score (OMICS_module_res\$pf_UB_BGe_pre\$partition_func_UB) for given parent set combinations.  
+OMICS_module_res$pf_UB_BGe_pre is a list that contains the upper bound of the partition function for hyperparameter 
+$\beta = 0$ (OMICS_module_res$pf_UB_BGe_pre$partition_func_UB), all possible parent set combinations for given node (OMICS_module_res$pf_UB_BGe_pre$partition_func_UB), corresponding energy (OMICS_module_res$pf_UB_BGe_pre$partition_func_UB) and BGe score (OMICS_module_res$pf_UB_BGe_pre$partition_func_UB) for given parent set combinations.  
 
 OMICS_module_res$B_prior_mat is a biological prior matrix.  
 
