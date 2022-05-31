@@ -71,7 +71,7 @@ Available omics data in the example TCGA COAD MSI dataset are gene expression (G
 omics$ge[1:5,1:5]
 </code></pre>
 
-<span style="color:gray">cardinals</span>
+<span style="color:grey">cardinals</span>
 
 These values correspond to normalised RNA-seq data. 
 However, the user is not limited to this platform. Another assay, such as microarray data, can be used. The column names of omics$ge matrix must be entrez ID in the format ENTREZID:XXXX.
