@@ -198,17 +198,17 @@ Once it is created, we can run the trace_plots function, which generates:
   
 1. beta_values.svg: trace plot of beta values (we want to explore the sample space many times and avoid flat bits - the chain stays in the same state for too long)  
 <p align="center">
-<img src="vignettes/figures/beta_values.svg" width="300" height="450">
+<img src="vignettes/figures/beta_values.svg" width="400" height="400">
 </p>
 
 2. post_prob_edges.svg: consistency of edges posterior probabilities in two independent MCMC simulations (scatter plot of the edge weights confidence using two independent MCMC runs; the convergence is determined by the spread of the points around the y=x line)   
 <p align="center">
-<img src="vignettes/figures/post_prob_edges.svg" width="300" height="450">
+<img src="vignettes/figures/post_prob_edges.svg" width="400" height="400">
 </p>
 
-3. convergence_RMS.svg: the c_{rms} strength for the convergence evaluation (summarizes the spread of the points around the line y=x in post_prob_edges.svg, for details see (Agostinho et al., 2015 and Pacinkova \& Popovici, 2022)).  
+3. convergence_RMS.svg: the c_{rms} strength for the convergence evaluation (summarizes the spread of the points around the line y=x in post_prob_edges.svg, for details see ([Agostinho et al., 2015](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-015-0734-6) and [Pacinkova \& Popovici, 2022](https://assets.researchsquare.com/files/rs-1291540/v1_covered.pdf?c=1643735189))).  
 <p align="center">
-<img src="vignettes/figures/convergence_RMS.svg" width="300" height="450">
+<img src="vignettes/figures/convergence_RMS.svg" width="400" height="400">
 </p>
 
 The parameter edge_freq_thres determines the quantile of all edge weights used to filter only reliable edges.
