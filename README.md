@@ -1,8 +1,8 @@
 # IntOMICS: an R package for integrative analysis of multi-omics data to infer regulatory networks.
 
 IntOMICS is an efficient integrative framework based on Bayesian networks.
-IntOMICS systematically analyses gene expression, DNA methylation, copy number variation and biological prior knowledge to infer regulatory networks. 
-IntOMICS complements the missing biological prior knowledge by so-called empirical biological knowledge, estimated from the available experimental data. 
+IntOMICS systematically analyses gene expression (GE), DNA methylation (METH), copy number variation (CNV) and biological prior knowledge (B) to infer regulatory networks. 
+IntOMICS complements the missing biological prior knowledge by so-called empirical biological knowledge (empB), estimated from the available experimental data. 
 An automatically tuned MCMC algorithm ([Yang and Rosenthal, 2017](http://probability.ca/jeff/ftpdir/jinyoung1.pdf)) estimates model parameters and the empirical biological knowledge.
 Conventional MCMC algorithm with additional Markov blanket resampling step ([Su and Borsuk, 2016](https://jmlr.org/papers/volume17/su16a/su16a.pdf)) infers resulting regulatory network structure consisting of three types of nodes: GE nodes refer to gene expression levels, CNV nodes refer to associated copy number variations, and METH nodes refer to associated DNA methylation probe(s).
 Regulatory networks derived from IntOMICS provide deeper insights into the complex flow of genetic information. 
@@ -165,16 +165,30 @@ PK is the data.frame with biological prior knowledge. Column names are "src_entr
 The first step is to define the biological prior matrix and estimate the upper bound of the partition function needed to define the prior distribution of network structures.
 We also need to define all possible parent set configurations for each node.  For each parent set configuration, we compute the energy (needed to define the prior distribution of network structures) and the BGe score (needed to determine the posterior probability of network structures).
 These functionalities are available through the \texttt{OMICS\_module()} function.  
-We can use linear regression to filter irrelevant DNA methylation probes. We set the parameter lm_METH = TRUE (default lm_METH = TRUE).
-We can also specify the threshold for the R^2 to choose DNA methylation probes with significant coefficient using the r_squared_thres (default = 0.3).
+We can use linear regression to filter irrelevant DNA methylation probes. We set the parameter lm_METH = TRUE.
+We can also specify the threshold for the R^2 to choose DNA methylation probes with significant coefficient using the r_squared_thres (default = 0.3), or p-value using the p_val_thres (default = 0.05).  
+There are several other parameters: woPKGE_belief (default = 0.5) refers to the belief concerning GE-GE interactions without prior knowledge, nonGE_belief (default = 0.5) refers to the belief concerning the belief concerning interactions of features except GE (e.g. CNV-GE, METH-GE), TFBS_belief refers to the belief concerning the transcription factor and its target interaction (default = 0.75).
+
 <pre><code>
 OMICS_module_res <- OMICS_module(omics = omics, PK = PK, layers_def = layers_def, annot = annot, r_squared_thres = 0.3, lm_METH = TRUE)
 </code></pre>
 
-These DNA methylation probes passed the filter:
+This function returns several outputs:
 <pre><code>
-OMICS_module_res$annot
+names(OMICS_module_res)
 </code></pre>
+
+```diff
+#> "pf_UB_BGe_pre"       "B_prior_mat"         "annot"               "omics"               "layers_def"          "omics_meth_original"
+```
+
+OMICS_module_res$pf_UB_BGe_pre is a list that contains the upper bound of the partition function for hyperparameter $\beta = 0$ (OMICS_module_res$pf_UB_BGe_pre$partition_func_UB), all possible parent set combinations for given node (OMICS_module_res$pf_UB_BGe_pre$partition_func_UB), corresponding energy (OMICS_module_res$pf_UB_BGe_pre$partition_func_UB) and BGe score (OMICS_module_res$pf_UB_BGe_pre$partition_func_UB) for given parent set combinations.  
+
+OMICS_module_res$B_prior_mat is a biological prior matrix.  
+
+OMICS_module_res$annot contains DNA methylation probes that passed the filter.  
+
+OMICS_module_res$omics is a list with gene expression, copy number variation and normalised methylation data (possibly filtered if we use lm_METH = TRUE). The original methylation data are saved in OMICS_module_res$omics_meth_original.
 
 
 ## Part 3: MCMC simulation
