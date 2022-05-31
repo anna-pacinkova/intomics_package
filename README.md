@@ -197,11 +197,20 @@ Now we have to create a directory to store trace plots.
 Once it is created, we can run the trace_plots function, which generates:  
   
 1. beta_values.svg: trace plot of beta values (we want to explore the sample space many times and avoid flat bits - the chain stays in the same state for too long)  
-  
+<p align="center">
+<img src="vignettes/figures/beta_values.svg" width="300" height="450">
+</p>
+
 2. post_prob_edges.svg: consistency of edges posterior probabilities in two independent MCMC simulations (scatter plot of the edge weights confidence using two independent MCMC runs; the convergence is determined by the spread of the points around the y=x line)   
-  
+<p align="center">
+<img src="vignettes/figures/post_prob_edges.svg" width="300" height="450">
+</p>
+
 3. convergence_RMS.svg: the c_{rms} strength for the convergence evaluation (summarizes the spread of the points around the line y=x in post_prob_edges.svg, for details see (Agostinho et al., 2015 and Pacinkova \& Popovici, 2022)).  
-  
+<p align="center">
+<img src="vignettes/figures/convergence_RMS.svg" width="300" height="450">
+</p>
+
 The parameter edge_freq_thres determines the quantile of all edge weights used to filter only reliable edges.
 The parameter gene_ID determines the IDs used in the final network. There are two options: 'gene_symbol' (default) or 'entrezID'.
 <pre><code>
