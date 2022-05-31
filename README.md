@@ -77,9 +77,9 @@ omics$ge[1:5,1:5]
 #> TCGA-G4-6586     3.480572      5.034181      6.888025      5.553441      6.143032
 #> TCGA-F4-6570     3.814445      4.634686      7.051842      4.906874      6.350766
 ```
-
 These values correspond to normalised RNA-seq data. 
 However, the user is not limited to this platform. Another assay, such as microarray data, can be used. The column names of omics$ge matrix must be entrez ID in the format ENTREZID:XXXX.
+
 <pre><code>
 omics$cnv[1:5,1:5]
 </code></pre>
@@ -91,16 +91,21 @@ omics$cnv[1:5,1:5]
 #> TCGA-G4-6586       -0.023         0.004        -0.007         0.010        -0.003
 #> TCGA-F4-6570       -0.002         0.005         0.223         0.003         0.009
 ```
-
 These copy number values represent segment mean values equal to $log_2(\frac{copy-number}{2})$.
 The column names of omics\$cnv matrix must be entrez ID in the format entrezid:XXXX.
 In the omics$cnv matrix, define only columns with available CNV data.
 
-
 <pre><code>
 omics$meth[1:5,1:5]
 </code></pre>
-
+```diff
+#>              cg06108510 cg07101782 cg17641046 cg25202636 cg03497419
+#> TCGA-A6-5661  0.6042037  0.5550869  0.6473482  0.5234418  0.5671736
+#> TCGA-AD-5900  0.5173069  0.4365084  0.6672522  0.5742973  0.4907275
+#> TCGA-CM-4743  0.4490056  0.3934676  0.5471020  0.4236996  0.4318266
+#> TCGA-G4-6586  0.6372390  0.6085915  0.7351724  0.6520927  0.6764021
+#> TCGA-F4-6570  0.6641252  0.6076128  0.6589021  0.5845556  0.6457823
+```
 These values represent DNA methylation beta values. The column names of the omics$meth matrix are probe IDs.  
 
 IntOMICS is designed to infer regulatory networks even if the copy number variation or DNA methylation data (or both) are not available.  
@@ -111,21 +116,47 @@ If methylation data are available, we have to provide an annotation:
 <pre><code>
 str(annot)
 </code></pre>
-
-<span style="font-family:Mono;">annot</span> is a named list. Each component of the list is a character vector and corresponds to probe IDs associated with a given gene. Names of the annot must be again in the format ENTREZID:XXXX.  
+```diff
+#> List of 7
+#>  $ ENTREZID:4292: chr [1:6] "cg06108510" "cg07101782" "cg17641046" "cg25202636" ...
+#>  $ ENTREZID:5594: chr [1:19] "cg11335969" "cg23681311" "cg00014104" "cg00578437" ...
+#>  $ ENTREZID:5595: chr [1:10] "cg02286008" "cg05902503" "cg02521996" "cg05445914" ...
+#>  $ ENTREZID:3845: chr [1:29] "cg12990174" "cg20836156" "cg00584022" "cg02850821" ...
+#>  $ ENTREZID:4609: chr [1:40] "cg00163372" "cg08526705" "cg11688275" "cg15801573" ...
+#>  $ ENTREZID:673 : chr [1:19] "cg14094063" "cg20200035" "cg26956263" "cg01510153" ...
+#>  $ ENTREZID:5604: chr [1:21] "cg00098814" "cg05866062" "cg08161449" "cg11559852" ...
+```
+annot is a named list. Each component of the list is a character vector and corresponds to probe IDs associated with a given gene. Names of the annot must be again in the format ENTREZID:XXXX.  
 
 To generate comprehensive figures with gene IDs, we need to provide a gene annotation table:
 <pre><code>
 gene_annot
 </code></pre>
-
+```diff
+#>         entrezID gene_symbol
+#> 18  ENTREZID:673        BRAF
+#> 15 ENTREZID:3845        KRAS
+#> 24 ENTREZID:4609         MYC
+#> 26 ENTREZID:5604      MAP2K1
+#> 27 ENTREZID:5594       MAPK1
+#> 28 ENTREZID:5595       MAPK3
+#> 41 ENTREZID:4292        MLH1
+```
 gene_annot is Gene ID conversion table with "entrezID" and "gene_symbol" column names. Gene symbols are used for the final regulatory network visualisation.  
 
 And finally, the prior knowledge from any source chosen by the user:
 <pre><code>
 PK
 </code></pre>
-
+```diff
+#>                                                 src_entrez   dest_entrez edge_type
+#> Long-term depression.144                      ENTREZID:673 ENTREZID:5604   present
+#> EGFR tyrosine kinase inhibitor resistance.18 ENTREZID:3845  ENTREZID:673   present
+#> EGFR tyrosine kinase inhibitor resistance.22 ENTREZID:5604 ENTREZID:5594   present
+#> EGFR tyrosine kinase inhibitor resistance.23 ENTREZID:5604 ENTREZID:5595   present
+#> EGFR tyrosine kinase inhibitor resistance.26 ENTREZID:5594 ENTREZID:4609   present
+#> EGFR tyrosine kinase inhibitor resistance.33 ENTREZID:5595 ENTREZID:4609   present
+```
 PK is the data.frame with biological prior knowledge. Column names are "src_entrez" (the parent node), "dest_entrez" (the child node) and "edge_type" (the prior knowledge about the direct interaction between parent and child node; the allowed values are "present" or "missing").
 
 
