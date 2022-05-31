@@ -66,25 +66,31 @@ IntOMICS framework takes as input:
 All data matrices are sampled from the same individuals.  
 
 Available omics data in the example TCGA COAD MSI dataset are gene expression (GE) of 7 genes + copy number variation (CNV) of 7 genes + beta value of 115 DNA methylation (METH) probes:
-
 <pre><code>
 omics$ge[1:5,1:5]
 </code></pre>
-
 ```diff
-- text in red
-+ text in green
-! text in orange
-# text in gray
-@@ text in purple (and bold)@@
+#>              ENTREZID:673 ENTREZID:3845 ENTREZID:4609 ENTREZID:5604 ENTREZID:5594
+#> TCGA-A6-5661     5.626990      5.718158      5.418139      4.569792      7.248533
+#> TCGA-AD-5900     3.268475      4.898989      7.867263      5.182608      6.054980
+#> TCGA-CM-4743     3.400621      5.468644      6.761254      5.418349      6.042386
+#> TCGA-G4-6586     3.480572      5.034181      6.888025      5.553441      6.143032
+#> TCGA-F4-6570     3.814445      4.634686      7.051842      4.906874      6.350766
 ```
 
 These values correspond to normalised RNA-seq data. 
 However, the user is not limited to this platform. Another assay, such as microarray data, can be used. The column names of omics$ge matrix must be entrez ID in the format ENTREZID:XXXX.
-
 <pre><code>
 omics$cnv[1:5,1:5]
 </code></pre>
+```diff
+#>              entrezid:673 entrezid:3845 entrezid:4609 entrezid:5604 entrezid:5594
+#> TCGA-A6-5661        0.008         0.004        -0.004         0.003        -0.004
+#> TCGA-AD-5900       -0.001         0.507         0.749         0.000        -0.009
+#> TCGA-CM-4743        0.004        -0.004        -0.003        -0.003        -0.021
+#> TCGA-G4-6586       -0.023         0.004        -0.007         0.010        -0.003
+#> TCGA-F4-6570       -0.002         0.005         0.223         0.003         0.009
+```
 
 These copy number values represent segment mean values equal to $log_2(\frac{copy-number}{2})$.
 The column names of omics\$cnv matrix must be entrez ID in the format entrezid:XXXX.
