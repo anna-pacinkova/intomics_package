@@ -193,32 +193,36 @@ BN_module_res <- BN_module(burn_in = 100000,
 
 ## Part 4: MCMC diagnostics
 
+Trace plots provide an important tool for assessing mixing of a Markov chain and should be inspected carefully.
 Now we have to create a directory to store trace plots. 
 Once it is created, we can run the trace_plots function, which generates:  
   
-1. beta_values.svg: trace plot of beta values (we want to explore the sample space many times and avoid flat bits - the chain stays in the same state for too long)  
+1. beta_values.svg: trace plot of beta values (we want to explore the sample space many times and avoid flat bits - the chain stays in the same state for too long; in this case, beta value fluctuates around single value, so the Markov chain is mixing well)  
 <p align="center">
 <img src="vignettes/figures/beta_values.svg" width="400" height="400">
 </p>
 
-2. post_prob_edges.svg: consistency of edges posterior probabilities in two independent MCMC simulations (scatter plot of the edge weights confidence using two independent MCMC runs; the convergence is determined by the spread of the points around the y=x line)   
+2. post_prob_edges.svg: consistency of edges posterior probabilities in two independent MCMC simulations (scatter plot of the edge weights confidence using two independent MCMC runs; the convergence is determined by the spread of the points around the y=x line; in this case, the edge weights seems to be consistent in two independent simulations)   
 <p align="center">
 <img src="vignettes/figures/post_prob_edges.svg" width="400" height="400">
 </p>
 
-3. convergence_RMS.svg: the c_{rms} strength for the convergence evaluation (summarizes the spread of the points around the line y=x in post_prob_edges.svg, for details see ([Agostinho et al., 2015](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-015-0734-6) and [Pacinkova \& Popovici, 2022](https://assets.researchsquare.com/files/rs-1291540/v1_covered.pdf?c=1643735189))).  
+3. convergence_RMS.svg: the c<sub>rms</sub> strength for the convergence evaluation (summarizes the spread of the points around the line y=x in post_prob_edges.svg, for details see ([Agostinho et al., 2015](https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-015-0734-6) and [Pacinkova \& Popovici, 2022](https://assets.researchsquare.com/files/rs-1291540/v1_covered.pdf?c=1643735189))).  
 <p align="center">
 <img src="vignettes/figures/convergence_RMS.svg" width="400" height="400">
 </p>
 
 The parameter edge_freq_thres determines the quantile of all edge weights used to filter only reliable edges.
 The parameter gene_ID determines the IDs used in the final network. There are two options: 'gene_symbol' (default) or 'entrezID'.
+
 <pre><code>
 res_weighted <- trace_plots(mcmc_res = BN_module_res, figures_dir = "figures/MSI/", burn_in = 100000, thin = 500, gene_annot = gene_annot, PK = PK, OMICS_module_res = OMICS_module_res, gene_ID = "gene_symbol", edge_freq_thres = 0.75)
 </code></pre>
 
 
 ## Part 5: IntOMICS resulting network structure
+
+We can plot the resulting regulatory network inferred by IntOMICS:
 
 <pre><code>
 ggraph(res_weighted$net_weighted, layout = 'dh') + 
@@ -230,7 +234,8 @@ ggraph(res_weighted$net_weighted, layout = 'dh') +
   geom_node_text(aes(label = label),family="serif")
 </code></pre>
 
-Edges highlighted in green are known from the biological prior knowledge. 
+Edges highlighted in cyan are known from the biological prior knowledge. 
+The edge labels reflects its empirical frequency over the final set of CPDAGs (for details see [Pacinkova \& Popovici, 2022](https://assets.researchsquare.com/files/rs-1291540/v1_covered.pdf?c=1643735189)).
 GE node names are in upper case, CNV node names are in lower case, METH node names are the same as DNA methylation probe names in omics$meth matrix.  
 
 Node colours legend:
@@ -239,6 +244,19 @@ legend_custom(net = res_weighted)
 </code></pre>
   
 Node colour scales are given by GE/CNV/METH values of all features from the corresponding input data matrix.  
+
+We can also change the edge labels to inspect the empirical prior knowledge inferred by IntOMICS using the argument edge_weights = "empB":
+<pre><code>
+res_weighted <- trace_plots(mcmc_res = BN_module_res, figures_dir = "figures/MSI/", burn_in = 100000, thin = 500, gene_annot = gene_annot, PK = PK, OMICS_module_res = OMICS_module_res, gene_ID = "gene_symbol", edge_freq_thres = 0.75, edge_weights = "empB")
+
+ggraph(res_weighted$net_weighted, layout = 'dh') + 
+  geom_edge_link(aes(end_cap = circle(node2.degree + 7, "pt"), edge_color = edge, label = weight),
+                 arrow = arrow(angle = 20, length = unit(0.1, "inches"),
+                              ends = "last", type = "closed"))+
+  geom_node_point(aes(color = factor(color)), size = 10) +
+  scale_colour_manual(values = res_weighted$node_palette, guide = "none")+
+  geom_node_text(aes(label = label),family="serif")
+</code></pre>
 
 
 If you find a bug or have a comment let us know, please, via an e-mail: ana.pacinkova@gmail.com
