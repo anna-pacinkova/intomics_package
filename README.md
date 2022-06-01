@@ -64,7 +64,7 @@ IntOMICS framework takes as input:
   
 All data matrices are sampled from the same individuals.  
 
-Available omics data in the example TCGA COAD MSI dataset are gene expression (GE) of 7 genes + copy number variation (CNV) of 7 genes + beta value of 115 DNA methylation (METH) probes:
+Available omics data saved in a names list ```omics``` in the example TCGA COAD MSI dataset are gene expression (GE) of 7 genes + copy number variation (CNV) of 7 genes + beta value of 115 DNA methylation (METH) probes:
 ```ruby
 omics$ge[1:5,1:5]
 ```
@@ -77,7 +77,7 @@ omics$ge[1:5,1:5]
 #> TCGA-F4-6570     3.814445      4.634686      7.051842      4.906874      6.350766
 ```
 These values correspond to normalised RNA-seq data. 
-However, the user is not limited to this platform. Another assay, such as microarray data, can be used. The column names of omics$ge matrix must be entrez ID in the format ENTREZID:XXXX.
+However, the user is not limited to this platform. Another assay, such as microarray data, can be used. The column names of ```omics$ge``` matrix must be entrez ID in the format ENTREZID:XXXX.
 
 ```ruby
 omics$cnv[1:5,1:5]
@@ -92,7 +92,7 @@ omics$cnv[1:5,1:5]
 ```
 These copy number values represent segment mean values equal to $log_2(\frac{copy-number}{2})$.
 The column names of ```omics$cnv``` matrix must be entrez ID in the format entrezid:XXXX.
-In the omics$cnv matrix, define only columns with available CNV data.
+In the ```omics$cnv``` matrix, define only columns with available CNV data.
 
 ```ruby
 omics$meth[1:5,1:5]
@@ -105,7 +105,7 @@ omics$meth[1:5,1:5]
 #> TCGA-G4-6586  0.6372390  0.6085915  0.7351724  0.6520927  0.6764021
 #> TCGA-F4-6570  0.6641252  0.6076128  0.6589021  0.5845556  0.6457823
 ```
-These values represent DNA methylation beta values. The column names of the omics$meth matrix are probe IDs.  
+These values represent DNA methylation beta values. The column names of the ```omics$meth``` matrix are probe IDs.  
 
 IntOMICS is designed to infer regulatory networks even if the copy number variation or DNA methylation data (or both) are not available.  
 
@@ -125,7 +125,7 @@ str(annot)
 #>  $ ENTREZID:673 : chr [1:19] "cg14094063" "cg20200035" "cg26956263" "cg01510153" ...
 #>  $ ENTREZID:5604: chr [1:21] "cg00098814" "cg05866062" "cg08161449" "cg11559852" ...
 ```
-annot is a named list. Each component of the list is a character vector and corresponds to probe IDs associated with a given gene. Names of the annot must be again in the format ENTREZID:XXXX.  
+```annot``` is a named list. Each component of the list is a character vector and corresponds to probe IDs associated with a given gene. Names of the annot must be again in the format ENTREZID:XXXX.  
 
 To generate comprehensive figures with gene IDs, we need to provide a gene annotation table:
 ```ruby
@@ -141,7 +141,7 @@ gene_annot
 #> 28 ENTREZID:5595       MAPK3
 #> 41 ENTREZID:4292        MLH1
 ```
-gene_annot is Gene ID conversion table with "entrezID" and "gene_symbol" column names. Gene symbols are used for the final regulatory network visualisation.  
+```gene_annot``` is Gene ID conversion table with "entrezID" and "gene_symbol" column names. Gene symbols are used for the final regulatory network visualisation.  
 
 And finally, the prior knowledge from any source chosen by the user:
 ```ruby
@@ -156,17 +156,18 @@ PK
 #> EGFR tyrosine kinase inhibitor resistance.26 ENTREZID:5594 ENTREZID:4609   present
 #> EGFR tyrosine kinase inhibitor resistance.33 ENTREZID:5595 ENTREZID:4609   present
 ```
-PK is the data.frame with biological prior knowledge. Column names are "src_entrez" (the parent node), "dest_entrez" (the child node) and "edge_type" (the prior knowledge about the direct interaction between parent and child node; the allowed values are "present" or "missing").
+```PK``` is the data.frame with biological prior knowledge. Column names are "src_entrez" (the parent node), "dest_entrez" (the child node) and "edge_type" (the prior knowledge about the direct interaction between parent and child node; the allowed values are "present" or "missing").
 
 
 ## Part 2: Data preprocessing
 
 The first step is to define the biological prior matrix and estimate the upper bound of the partition function needed to define the prior distribution of network structures.
 We also need to define all possible parent set configurations for each node.  For each parent set configuration, we compute the energy (needed to define the prior distribution of network structures) and the BGe score (needed to determine the posterior probability of network structures).
-These functionalities are available through the \texttt{OMICS\_module()} function.  
-We can use linear regression to filter irrelevant DNA methylation probes. We set the parameter lm_METH = TRUE.
-We can also specify the threshold for the R^2 to choose DNA methylation probes with significant coefficient using the r_squared_thres (default = 0.3), or p-value using the p_val_thres (default = 0.05).  
-There are several other parameters: woPKGE_belief (default = 0.5) refers to the belief concerning GE-GE interactions without prior knowledge, nonGE_belief (default = 0.5) refers to the belief concerning the belief concerning interactions of features except GE (e.g. CNV-GE, METH-GE), TFBS_belief refers to the belief concerning the transcription factor and its target interaction (default = 0.75).
+These functionalities are available through the ```OMICS\_module``` function.  
+We can use linear regression to filter irrelevant DNA methylation probes. We set the parameter "lm_METH = TRUE".
+We can also specify the threshold for the R^2 to choose DNA methylation probes with significant coefficient using argument "r_squared_thres" (default = 0.3), or p-value using "p_val_thres" (default = 0.05).  
+There are several other parameters: "woPKGE_belief" (default = 0.5) refers to the belief concerning GE-GE interactions without prior knowledge, "nonGE_belief" (default = 0.5) refers to the belief concerning the belief concerning interactions of features except GE (e.g. CNV-GE, METH-GE), "TFBS_belief" refers to the belief concerning the transcription factor and its target interaction (default = 0.75).
+Note that all interactions with belief equal to "woPKGE_belief" in biological prior knowledge will be updated in empirical biological knowledge.
 
 ```ruby
 OMICS_module_res <- OMICS_module(omics = omics, PK = PK, layers_def = layers_def, annot = annot, r_squared_thres = 0.3, lm_METH = TRUE)
@@ -181,17 +182,22 @@ names(OMICS_module_res)
 #> "pf_UB_BGe_pre"       "B_prior_mat"         "annot"               "omics"               "layers_def"          "omics_meth_original"
 ```
 
-OMICS_module_res$pf_UB_BGe_pre is a list that contains the upper bound of the partition function for hyperparameter 
-$\beta = 0$ (OMICS_module_res$pf_UB_BGe_pre$partition_func_UB), all possible parent set combinations for given node (OMICS_module_res$pf_UB_BGe_pre$partition_func_UB), corresponding energy (OMICS_module_res$pf_UB_BGe_pre$partition_func_UB) and BGe score (OMICS_module_res$pf_UB_BGe_pre$partition_func_UB) for given parent set combinations.  
-OMICS_module_res$B_prior_mat is a biological prior matrix.  
-OMICS_module_res$annot contains DNA methylation probes that passed the filter.  
-OMICS_module_res$omics is a list with gene expression, copy number variation and normalised methylation data (possibly filtered if we use lm_METH = TRUE). The original methylation data are saved in OMICS_module_res$omics_meth_original.
+1. ```OMICS_module_res$pf_UB_BGe_pre``` is a list that contains:
+- ```OMICS_module_res$pf_UB_BGe_pre$partition_func_UB``` the upper bound of the partition function for hyperparameter 
+$\beta = 0$,
+- ```OMICS_module_res$pf_UB_BGe_pre$partition_func_UB``` all possible parent set configuration for given node,
+- ```OMICS_module_res$pf_UB_BGe_pre$partition_func_UB``` energy for given parent set configurations,
+- ```OMICS_module_res$pf_UB_BGe_pre$partition_func_UB``` BGe score for given parent set configurations.  
+2. ```OMICS_module_res$B_prior_mat``` is a biological prior matrix.
+3. ```OMICS_module_res$annot``` contains DNA methylation probes that passed the filter.  
+4. ```OMICS_module_res$omics``` is a list with gene expression, copy number variation and normalised methylation data (possibly filtered if we use "lm_METH = TRUE").
+5. ```OMICS_module_res$omics_meth_original``` the original methylation data.
 
 
 ## Part 3: MCMC simulation
 
 Now, we can use the automatically tuned MCMC algorithm (Yang and Rosenthal, 2017) to estimate model parameters and empirical biological knowledge and the conventional MCMC algorithm with additional Markov blanket resampling step (Su and Borsuk, 2016) to infer regulatory network structure consisting of three types of nodes: GE, CNV and METH nodes. 
-This step can be time-consuming (you can skip it and use the pre-computed result -> R object BN_module_res).
+This step can be time-consuming (you can skip it and use the pre-computed result -> R object ```BN_module_res```).
 ```ruby
 BN_module_res <- BN_module(burn_in = 100000, 
                            thin = 500, 
@@ -223,8 +229,8 @@ Once it is created, we can run the trace_plots function, which generates:
 <img src="vignettes/figures/convergence_RMS.svg" width="400" height="400">
 </p>
 
-The parameter edge_freq_thres determines the quantile of all edge weights used to filter only reliable edges.
-The parameter gene_ID determines the IDs used in the final network. There are two options: 'gene_symbol' (default) or 'entrezID'.
+The parameter "edge_freq_thres" determines the quantile of all edge weights used to filter only reliable edges.
+The parameter "gene_ID" determines the IDs used in the final network. There are two options: "gene_symbol" (default) or "entrezID".
 
 ```ruby
 res_weighted <- trace_plots(mcmc_res = BN_module_res, figures_dir = "figures/MSI/", burn_in = 100000, thin = 500, gene_annot = gene_annot, PK = PK, OMICS_module_res = OMICS_module_res, gene_ID = "gene_symbol", edge_freq_thres = 0.75)
@@ -256,7 +262,7 @@ legend_custom(net = res_weighted)
   
 Node colour scales are given by GE/CNV/METH values of all features from the corresponding input data matrix.  
 
-We can also change the edge labels to inspect the empirical prior knowledge inferred by IntOMICS using the argument edge_weights = "empB":
+We can also change the edge labels to inspect the empirical prior knowledge inferred by IntOMICS using the argument "edge_weights = empB" (default = MCMC_freq):
 ```ruby
 res_weighted <- trace_plots(mcmc_res = BN_module_res, figures_dir = "figures/MSI/", burn_in = 100000, thin = 500, gene_annot = gene_annot, PK = PK, OMICS_module_res = OMICS_module_res, gene_ID = "gene_symbol", edge_freq_thres = 0.75, edge_weights = "empB")
 
