@@ -47,9 +47,9 @@ library(bnlearn)
 library(RColorBrewer)
 library(png) 
 library(matrixStats)
-suppressMessages(library(igraph))
-suppressMessages(library(ggraph))
-suppressMessages(library(bnstruct))
+library(igraph)
+library(ggraph)
+library(bnstruct)
 ```
 
 IntOMICS framework takes as input:  
@@ -94,9 +94,9 @@ These copy number values represent segment mean values equal to $log_2(\frac{cop
 The column names of omics\$cnv matrix must be entrez ID in the format entrezid:XXXX.
 In the omics$cnv matrix, define only columns with available CNV data.
 
-<pre><code>
+```ruby
 omics$meth[1:5,1:5]
-</code></pre>
+```
 ```diff
 #>              cg06108510 cg07101782 cg17641046 cg25202636 cg03497419
 #> TCGA-A6-5661  0.6042037  0.5550869  0.6473482  0.5234418  0.5671736
@@ -112,9 +112,9 @@ IntOMICS is designed to infer regulatory networks even if the copy number variat
 
 If methylation data are available, we have to provide an annotation:
 
-<pre><code>
+```ruby
 str(annot)
-</code></pre>
+```
 ```diff
 #> List of 7
 #>  $ ENTREZID:4292: chr [1:6] "cg06108510" "cg07101782" "cg17641046" "cg25202636" ...
@@ -128,9 +128,9 @@ str(annot)
 annot is a named list. Each component of the list is a character vector and corresponds to probe IDs associated with a given gene. Names of the annot must be again in the format ENTREZID:XXXX.  
 
 To generate comprehensive figures with gene IDs, we need to provide a gene annotation table:
-<pre><code>
+```ruby
 gene_annot
-</code></pre>
+```
 ```diff
 #>         entrezID gene_symbol
 #> 18  ENTREZID:673        BRAF
@@ -144,9 +144,9 @@ gene_annot
 gene_annot is Gene ID conversion table with "entrezID" and "gene_symbol" column names. Gene symbols are used for the final regulatory network visualisation.  
 
 And finally, the prior knowledge from any source chosen by the user:
-<pre><code>
+```ruby
 PK
-</code></pre>
+```
 ```diff
 #>                                                 src_entrez   dest_entrez edge_type
 #> Long-term depression.144                      ENTREZID:673 ENTREZID:5604   present
@@ -168,14 +168,14 @@ We can use linear regression to filter irrelevant DNA methylation probes. We set
 We can also specify the threshold for the R^2 to choose DNA methylation probes with significant coefficient using the r_squared_thres (default = 0.3), or p-value using the p_val_thres (default = 0.05).  
 There are several other parameters: woPKGE_belief (default = 0.5) refers to the belief concerning GE-GE interactions without prior knowledge, nonGE_belief (default = 0.5) refers to the belief concerning the belief concerning interactions of features except GE (e.g. CNV-GE, METH-GE), TFBS_belief refers to the belief concerning the transcription factor and its target interaction (default = 0.75).
 
-<pre><code>
+```ruby
 OMICS_module_res <- OMICS_module(omics = omics, PK = PK, layers_def = layers_def, annot = annot, r_squared_thres = 0.3, lm_METH = TRUE)
-</code></pre>
+```
 
 This function returns several outputs:
-<pre><code>
+```ruby
 names(OMICS_module_res)
-</code></pre>
+``
 
 ```diff
 #> "pf_UB_BGe_pre"       "B_prior_mat"         "annot"               "omics"               "layers_def"          "omics_meth_original"
@@ -183,11 +183,8 @@ names(OMICS_module_res)
 
 OMICS_module_res$pf_UB_BGe_pre is a list that contains the upper bound of the partition function for hyperparameter 
 $\beta = 0$ (OMICS_module_res$pf_UB_BGe_pre$partition_func_UB), all possible parent set combinations for given node (OMICS_module_res$pf_UB_BGe_pre$partition_func_UB), corresponding energy (OMICS_module_res$pf_UB_BGe_pre$partition_func_UB) and BGe score (OMICS_module_res$pf_UB_BGe_pre$partition_func_UB) for given parent set combinations.  
-
 OMICS_module_res$B_prior_mat is a biological prior matrix.  
-
 OMICS_module_res$annot contains DNA methylation probes that passed the filter.  
-
 OMICS_module_res$omics is a list with gene expression, copy number variation and normalised methylation data (possibly filtered if we use lm_METH = TRUE). The original methylation data are saved in OMICS_module_res$omics_meth_original.
 
 
@@ -195,14 +192,14 @@ OMICS_module_res$omics is a list with gene expression, copy number variation and
 
 Now, we can use the automatically tuned MCMC algorithm (Yang and Rosenthal, 2017) to estimate model parameters and empirical biological knowledge and the conventional MCMC algorithm with additional Markov blanket resampling step (Su and Borsuk, 2016) to infer regulatory network structure consisting of three types of nodes: GE, CNV and METH nodes. 
 This step can be time-consuming (you can skip it and use the pre-computed result -> R object BN_module_res).
-<pre><code>
+```ruby
 BN_module_res <- BN_module(burn_in = 100000, 
                            thin = 500, 
                            seed1 = 1001,
                            seed2 = 2002,
                            OMICS_module_res = OMICS_module_res,
                            minseglen = 50000)
-</code></pre>
+```
 
 
 ## Part 4: MCMC diagnostics
@@ -229,16 +226,16 @@ Once it is created, we can run the trace_plots function, which generates:
 The parameter edge_freq_thres determines the quantile of all edge weights used to filter only reliable edges.
 The parameter gene_ID determines the IDs used in the final network. There are two options: 'gene_symbol' (default) or 'entrezID'.
 
-<pre><code>
+```ruby
 res_weighted <- trace_plots(mcmc_res = BN_module_res, figures_dir = "figures/MSI/", burn_in = 100000, thin = 500, gene_annot = gene_annot, PK = PK, OMICS_module_res = OMICS_module_res, gene_ID = "gene_symbol", edge_freq_thres = 0.75)
-</code></pre>
+```
 
 
 ## Part 5: IntOMICS resulting network structure
 
 We can plot the resulting regulatory network inferred by IntOMICS:
 
-<pre><code>
+```ruby
 ggraph(res_weighted$net_weighted, layout = 'dh') + 
   geom_edge_link(aes(end_cap = circle(node2.degree + 7, "pt"), edge_color = edge, label = weight),
                  arrow = arrow(angle = 20, length = unit(0.1, "inches"),
@@ -246,21 +243,21 @@ ggraph(res_weighted$net_weighted, layout = 'dh') +
   geom_node_point(aes(color = factor(color)), size = 10) +
   scale_colour_manual(values = res_weighted$node_palette, guide = "none")+
   geom_node_text(aes(label = label),family="serif")
-</code></pre>
+```
 
 Edges highlighted in cyan are known from the biological prior knowledge. 
 The edge labels reflects its empirical frequency over the final set of CPDAGs (for details see [Pacinkova \& Popovici, 2022](https://assets.researchsquare.com/files/rs-1291540/v1_covered.pdf?c=1643735189)).
 GE node names are in upper case, CNV node names are in lower case, METH node names are the same as DNA methylation probe names in omics$meth matrix.  
 
 Node colours legend:
-<pre><code>
+```ruby
 legend_custom(net = res_weighted)
-</code></pre>
+```
   
 Node colour scales are given by GE/CNV/METH values of all features from the corresponding input data matrix.  
 
 We can also change the edge labels to inspect the empirical prior knowledge inferred by IntOMICS using the argument edge_weights = "empB":
-<pre><code>
+```ruby
 res_weighted <- trace_plots(mcmc_res = BN_module_res, figures_dir = "figures/MSI/", burn_in = 100000, thin = 500, gene_annot = gene_annot, PK = PK, OMICS_module_res = OMICS_module_res, gene_ID = "gene_symbol", edge_freq_thres = 0.75, edge_weights = "empB")
 
 ggraph(res_weighted$net_weighted, layout = 'dh') + 
@@ -270,7 +267,7 @@ ggraph(res_weighted$net_weighted, layout = 'dh') +
   geom_node_point(aes(color = factor(color)), size = 10) +
   scale_colour_manual(values = res_weighted$node_palette, guide = "none")+
   geom_node_text(aes(label = label),family="serif")
-</code></pre>
+```
 
 
 If you find a bug or have a comment let us know, please, via an e-mail: ana.pacinkova@gmail.com
