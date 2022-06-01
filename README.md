@@ -4,7 +4,7 @@ IntOMICS is an efficient integrative framework based on Bayesian networks.
 IntOMICS systematically analyses gene expression (GE), DNA methylation (METH), copy number variation (CNV) and biological prior knowledge (B) to infer regulatory networks. 
 IntOMICS complements the missing biological prior knowledge by so-called empirical biological knowledge (empB), estimated from the available experimental data. 
 An automatically tuned MCMC algorithm ([Yang and Rosenthal, 2017](http://probability.ca/jeff/ftpdir/jinyoung1.pdf)) estimates model parameters and the empirical biological knowledge.
-Conventional MCMC algorithm with additional Markov blanket resampling step ([Su and Borsuk, 2016](https://jmlr.org/papers/volume17/su16a/su16a.pdf)) infers resulting regulatory network structure consisting of three types of nodes: GE nodes refer to gene expression levels, CNV nodes refer to associated copy number variations, and METH nodes refer to associated DNA methylation probe(s).
+Conventional MCMC algorithm with additional Markov blanket resampling (MBR) step ([Su and Borsuk, 2016](https://jmlr.org/papers/volume17/su16a/su16a.pdf)) infers resulting regulatory network structure consisting of three types of nodes: GE nodes refer to gene expression levels, CNV nodes refer to associated copy number variations, and METH nodes refer to associated DNA methylation probe(s).
 Regulatory networks derived from IntOMICS provide deeper insights into the complex flow of genetic information. 
 IntOMICS is a powerful resource for exploratory systems biology and can provide valuable insights into the complex mechanisms of biological processes 
 that has a vital role in personalised medicine.
@@ -12,9 +12,6 @@ that has a vital role in personalised medicine.
 IntOMICS takes as input (i) gene expression matrix GE with m samples and n1 genes, (ii) associated copy number variation matrix CNV (m x n2), 
 (iii) associated DNA methylation matrix of beta-values METH (m x n3) sampled from the same individuals, and (iv) the biological prior knowledge 
 with information on known interactions among molecular features. 
-An automatically tuned MCMC algorithm (Yang and Rosenthal, 2009) estimates parameters and empirical biological knowledge. 
-Conventional MCMC algorithm with additional Markov blanket resampling step (Su and Borsuk, 2016) is used to infer resulting regulatory network structure 
-consisting of three types of nodes: GE nodes refer to gene expression levels, CNV nodes refer to copy number variations, and METH nodes refer to DNA methylation. 
 The resulting regulatory network structure contains the edge weights $w_i$ representing the empirical frequency of given edge over samples of network structures from two independent MCMC simulations.
 
 <p align="center">
@@ -166,7 +163,7 @@ We also need to define all possible parent set configurations for each node.  Fo
 These functionalities are available through the ```OMICS\_module``` function.  
 We can use linear regression to filter irrelevant DNA methylation probes. We set the parameter "lm_METH = TRUE".
 We can also specify the threshold for the R^2 to choose DNA methylation probes with significant coefficient using argument "r_squared_thres" (default = 0.3), or p-value using "p_val_thres" (default = 0.05).  
-There are several other parameters: "woPKGE_belief" (default = 0.5) refers to the belief concerning GE-GE interactions without prior knowledge, "nonGE_belief" (default = 0.5) refers to the belief concerning the belief concerning interactions of features except GE (e.g. CNV-GE, METH-GE), "TFBS_belief" refers to the belief concerning the transcription factor and its target interaction (default = 0.75).
+There are several other arguments: "woPKGE_belief" (default = 0.5) refers to the belief concerning GE-GE interactions without prior knowledge, "nonGE_belief" (default = 0.5) refers to the belief concerning the belief concerning interactions of features except GE (e.g. CNV-GE, METH-GE), "TFBS_belief" refers to the belief concerning the transcription factor and its target interaction (default = 0.75).
 Note that all interactions with belief equal to "woPKGE_belief" in biological prior knowledge will be updated in empirical biological knowledge.
 
 ```ruby
@@ -206,6 +203,7 @@ BN_module_res <- BN_module(burn_in = 100000,
                            OMICS_module_res = OMICS_module_res,
                            minseglen = 50000)
 ```
+There are two optional arguments: "len" specifies the initial width of the sampling interval for hyperparameter $\beta$. However, this parameter will be tuned during the adaptive phases of the MCMC algorithm. "prob_mbr" specifies the probability of the MBR step (default = TRUE). We strongly recommend to use the default setting (for further details on how this argument affects MCMC scheme results, see [Su and Borsuk, 2016](https://jmlr.org/papers/volume17/su16a/su16a.pdf)).
 
 
 ## Part 4: MCMC diagnostics
@@ -229,9 +227,9 @@ Once it is created, we can run the trace_plots function, which generates:
 <img src="vignettes/figures/convergence_RMS.svg" width="400" height="400">
 </p>
 
-The parameter "edge_freq_thres" determines the quantile of all edge weights used to filter only reliable edges.
+The parameter "edge_freq_thres" determines the quantile of all edge weights used to filter only reliable edges (default = NULL, all edges will be considered as present). We recommend to use some edge weights filtering, such as 0.75 quantile of all edge weights in the resulting networks using "edge_freq_thres = 0.75".
 The parameter "gene_ID" determines the IDs used in the final network. There are two options: "gene_symbol" (default) or "entrezID".
-
+If you have changed the default value of the "TFBS_belief" argument in the ```OMICS_module``` function, you have to use the same argument in ```trace_plots``` function.
 ```ruby
 res_weighted <- trace_plots(mcmc_res = BN_module_res, figures_dir = "figures/MSI/", burn_in = 100000, thin = 500, gene_annot = gene_annot, PK = PK, OMICS_module_res = OMICS_module_res, gene_ID = "gene_symbol", edge_freq_thres = 0.75)
 ```
