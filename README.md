@@ -215,7 +215,7 @@ names(BN_module_res)
 1. ```BN_module_res$B_prior_mat_weighted``` is empirical biological knowledge matrix. Interactions from the biological prior knowledge and TFs-target interactions are constant (if "TFBS_belief" is not equal to "woPKGE_belief").
 2. ```BN_module_res$sampling.phase_res``` is a named list with results from the last sampling phase of the algorithm:
 - ```BN_module_res$sampling.phase_res$rms``` trace of root mean square used for c_rms measure to evaluate the convergence of MCMC simulation,
-- ---BN_module_res$sampling.phase_res$mcmc_sim_part_res``` contains CPDAGs of two independent MCMC simulations.
+- ```BN_module_res$sampling.phase_res$mcmc_sim_part_res``` contains CPDAGs of two independent MCMC simulations (for details see [Pacinkova \& Popovici, 2022](https://assets.researchsquare.com/files/rs-1291540/v1_covered.pdf?c=1643735189)).
 4. ```BN_module_res$beta_tuning``` is a named list for each iteration of adaptive phases that contains:
 - ```BN_module_res$beta_tuning$value``` trace of hyperparameter beta tuning,
 - ```BN_module_res$beta_tuning$len``` trace of width of the sampling interval for hyperparameter $\beta$.
@@ -264,7 +264,7 @@ ggraph(res_weighted$net_weighted, layout = 'dh') +
 ```
 
 Edges highlighted in cyan are known from the biological prior knowledge. 
-The edge labels reflects its empirical frequency over the final set of CPDAGs (for details see [Pacinkova \& Popovici, 2022](https://assets.researchsquare.com/files/rs-1291540/v1_covered.pdf?c=1643735189)).
+The edge labels reflects its empirical frequency over the final set of CPDAGs.
 GE node names are in upper case, CNV node names are in lower case, METH node names are the same as DNA methylation probe names in omics$meth matrix.  
 
 Node colours legend:
