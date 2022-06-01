@@ -167,7 +167,12 @@ There are several other arguments: "woPKGE_belief" (default = 0.5) refers to the
 Note that all interactions with belief equal to "woPKGE_belief" in biological prior knowledge will be updated in empirical biological knowledge.
 
 ```ruby
-OMICS_module_res <- OMICS_module(omics = omics, PK = PK, layers_def = layers_def, annot = annot, r_squared_thres = 0.3, lm_METH = TRUE)
+OMICS_module_res <- OMICS_module(omics = omics, 
+                                 PK = PK, 
+                                 layers_def = layers_def, 
+                                 annot = annot, 
+                                 r_squared_thres = 0.3, 
+                                 lm_METH = TRUE)
 ```
 
 This function returns several outputs:
@@ -245,13 +250,21 @@ The parameter "edge_freq_thres" determines the quantile of all edge weights used
 The parameter "gene_ID" determines the IDs used in the final network. There are two options: "gene_symbol" (default) or "entrezID".
 If you have changed the default value of the "TFBS_belief" argument in the ```OMICS_module``` function, you have to use the same argument in ```trace_plots``` function.
 ```ruby
-res_weighted <- trace_plots(mcmc_res = BN_module_res, figures_dir = "figures/MSI/", burn_in = 100000, thin = 500, gene_annot = gene_annot, PK = PK, OMICS_module_res = OMICS_module_res, gene_ID = "gene_symbol", edge_freq_thres = 0.75)
+res_weighted <- trace_plots(mcmc_res = BN_module_res, 
+                            figures_dir = "figures/MSI/", 
+                            burn_in = 100000, 
+                            thin = 500, 
+                            gene_annot = gene_annot, 
+                            PK = PK, 
+                            OMICS_module_res = OMICS_module_res,
+                            gene_ID = "gene_symbol", 
+                            edge_freq_thres = 0.75)
 ```
 
 
 ## Part 5: IntOMICS resulting network structure
 
-We can plot the resulting regulatory network inferred by IntOMICS:
+We can plot the resulting regulatory network inferred by IntOMICS using ```ggraph``` function from the [ggraph](https://github.com/thomasp85/ggraph) package:
 
 ```ruby
 ggraph(res_weighted$net_weighted, layout = 'dh') + 
@@ -262,8 +275,7 @@ ggraph(res_weighted$net_weighted, layout = 'dh') +
   scale_colour_manual(values = res_weighted$node_palette, guide = "none")+
   geom_node_text(aes(label = label),family="serif")
 ```
-
-Edges highlighted in cyan are known from the biological prior knowledge. 
+Edges highlighted in blue are known from the biological prior knowledge. 
 The edge labels reflects its empirical frequency over the final set of CPDAGs.
 GE node names are in upper case, CNV node names are in lower case, METH node names are the same as DNA methylation probe names in omics$meth matrix.  
 
@@ -276,7 +288,16 @@ Node colour scales are given by GE/CNV/METH values of all features from the corr
 
 We can also change the edge labels to inspect the empirical prior knowledge inferred by IntOMICS using the argument "edge_weights = empB" (default = MCMC_freq):
 ```ruby
-res_weighted <- trace_plots(mcmc_res = BN_module_res, figures_dir = "figures/MSI/", burn_in = 100000, thin = 500, gene_annot = gene_annot, PK = PK, OMICS_module_res = OMICS_module_res, gene_ID = "gene_symbol", edge_freq_thres = 0.75, edge_weights = "empB")
+res_weighted <- trace_plots(mcmc_res = BN_module_res, 
+                            figures_dir = "figures/MSI/", 
+                            burn_in = 100000, 
+                            thin = 500, 
+                            gene_annot = gene_annot, 
+                            PK = PK, 
+                            OMICS_module_res = OMICS_module_res, 
+                            gene_ID = "gene_symbol", 
+                            edge_freq_thres = 0.75, 
+                            edge_weights = "empB")
 
 ggraph(res_weighted$net_weighted, layout = 'dh') + 
   geom_edge_link(aes(end_cap = circle(node2.degree + 7, "pt"), edge_color = edge, label = weight),
