@@ -160,7 +160,7 @@ PK
 
 The first step is to define the biological prior matrix and estimate the upper bound of the partition function needed to define the prior distribution of network structures.
 We also need to define all possible parent set configurations for each node.  For each parent set configuration, we compute the energy (needed to define the prior distribution of network structures) and the BGe score (needed to determine the posterior probability of network structures).
-These functionalities are available through the ```OMICS\_module``` function.  
+These functionalities are available through the ```OMICS_module``` function.  
 We can use linear regression to filter irrelevant DNA methylation probes. We set the parameter "lm_METH = TRUE".
 We can also specify the threshold for the R^2 to choose DNA methylation probes with significant coefficient using argument "r_squared_thres" (default = 0.3), or p-value using "p_val_thres" (default = 0.05).  
 There are several other arguments: "woPKGE_belief" (default = 0.5) refers to the belief concerning GE-GE interactions without prior knowledge, "nonGE_belief" (default = 0.5) refers to the belief concerning the belief concerning interactions of features except GE (e.g. CNV-GE, METH-GE), "TFBS_belief" refers to the belief concerning the transcription factor and its target interaction (default = 0.75).
@@ -258,9 +258,9 @@ res_weighted <- trace_plots(mcmc_res = BN_module_res,
                             PK = PK, 
                             OMICS_module_res = OMICS_module_res,
                             gene_ID = "gene_symbol", 
-                            edge_freq_thres = 0.75)
+                            edge_freq_thres = 0.5,
+                            TFtargs = TFtarg_mat)
 ```
-
 
 ## Part 5: IntOMICS resulting network structure
 
@@ -275,6 +275,10 @@ ggraph(res_weighted$net_weighted, layout = 'dh') +
   scale_colour_manual(values = res_weighted$node_palette, guide = "none")+
   geom_node_text(aes(label = label),family="serif")
 ```
+<p align="center">
+<img src="vignettes/figures/fin_net.svg" width="400" height="400">
+</p>
+
 Edges highlighted in blue are known from the biological prior knowledge. 
 The edge labels reflects its empirical frequency over the final set of CPDAGs.
 GE node names are in upper case, CNV node names are in lower case, METH node names are the same as DNA methylation probe names in omics$meth matrix.  
@@ -283,7 +287,9 @@ Node colours legend:
 ```ruby
 legend_custom(net = res_weighted)
 ```
-  
+<p align="center">
+<img src="vignettes/figures/fin_net_legend.svg" width="400" height="400">
+</p>
 Node colour scales are given by GE/CNV/METH values of all features from the corresponding input data matrix.  
 
 We can also change the edge labels to inspect the empirical prior knowledge inferred by IntOMICS using the argument "edge_weights = empB" (default = MCMC_freq):
@@ -296,8 +302,9 @@ res_weighted <- trace_plots(mcmc_res = BN_module_res,
                             PK = PK, 
                             OMICS_module_res = OMICS_module_res, 
                             gene_ID = "gene_symbol", 
-                            edge_freq_thres = 0.75, 
-                            edge_weights = "empB")
+                            edge_freq_thres = 0.5, 
+                            edge_weights = "empB",
+                            TFtargs = TFtarg_mat)
 
 ggraph(res_weighted$net_weighted, layout = 'dh') + 
   geom_edge_link(aes(end_cap = circle(node2.degree + 7, "pt"), edge_color = edge, label = weight),
@@ -307,6 +314,20 @@ ggraph(res_weighted$net_weighted, layout = 'dh') +
   scale_colour_manual(values = res_weighted$node_palette, guide = "none")+
   geom_node_text(aes(label = label),family="serif")
 ```
+<p align="center">
+<img src="vignettes/figures/fin_net_empB.svg" width="400" height="400">
+</p>
+
+Function ```empB_heatmap``` can be used to check the difference between empirical biological knowledge and biological prior knowledge of GE-GE interactions:
+```ruby
+empB_heatmap(BN_module_res = BN_module_res, 
+             OMICS_module_res = OMICS_module_res, 
+             gene_annot = gene_annot, 
+             TFtargs = TFtarg_mat)
+```
+<p align="center">
+<img src="vignettes/figures/empB_matrix.svg" width="400" height="400">
+</p>
 
 
 If you find a bug or have a comment let us know, please, via an e-mail: ana.pacinkova@gmail.com
