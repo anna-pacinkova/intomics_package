@@ -276,7 +276,7 @@ ggraph(res_weighted$net_weighted, layout = 'dh') +
   geom_node_text(aes(label = label),family="serif")
 ```
 <p align="center">
-<img src="vignettes/figures/fin_net.svg" width="400" height="400">
+<img src="vignettes/figures/fin_net.svg" width="600" height="600">
 </p>
 
 Edges highlighted in blue are known from the biological prior knowledge. 
@@ -288,7 +288,7 @@ Node colours legend:
 legend_custom(net = res_weighted)
 ```
 <p align="center">
-<img src="vignettes/figures/fin_net_legend.svg" width="400" height="400">
+<img src="vignettes/figures/fin_net_legend.svg" width="350" height="350">
 </p>
 Node colour scales are given by GE/CNV/METH values of all features from the corresponding input data matrix.  
 
@@ -315,7 +315,7 @@ ggraph(res_weighted$net_weighted, layout = 'dh') +
   geom_node_text(aes(label = label),family="serif")
 ```
 <p align="center">
-<img src="vignettes/figures/fin_net_empB.svg" width="400" height="400">
+<img src="vignettes/figures/fin_net_empB.svg" width="600" height="600">
 </p>
 
 Function ```empB_heatmap``` can be used to check the difference between empirical biological knowledge and biological prior knowledge of GE-GE interactions:
@@ -326,9 +326,9 @@ empB_heatmap(BN_module_res = BN_module_res,
              TFtargs = TFtarg_mat)
 ```
 <p align="center">
-<img src="vignettes/figures/empB_matrix.svg" width="400" height="400">
+<img src="vignettes/figures/empB_matrix.svg" width="450" height="450">
 </p>
-
+Interactions with constant biological knowledge are highlighted in gray.
 
 If you find a bug or have a comment let us know, please, via an e-mail: ana.pacinkova@gmail.com
 
