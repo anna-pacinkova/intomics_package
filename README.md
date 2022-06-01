@@ -213,8 +213,12 @@ names(BN_module_res)
 #> "B_prior_mat_weighted" "sampling.phase_res"   "beta_tuning"
 ```
 1. ```BN_module_res$B_prior_mat_weighted``` is empirical biological knowledge matrix. Interactions from the biological prior knowledge and TFs-target interactions are constant (if "TFBS_belief" is not equal to "woPKGE_belief").
-2. ```BN_module_res$sampling.phase_res``` is a biological prior matrix.
-3. ```BN_module_res$beta_tuning``` contains DNA methylation probes that passed the filter. 
+2. ```BN_module_res$sampling.phase_res``` is a named list with results from the last sampling phase of the algorithm:
+- ```BN_module_res$sampling.phase_res$rms``` trace of root mean square used for c_rms measure to evaluate the convergence of MCMC simulation,
+- ---BN_module_res$sampling.phase_res$mcmc_sim_part_res``` contains CPDAGs of two independent MCMC simulations.
+4. ```BN_module_res$beta_tuning``` is a named list for each iteration of adaptive phases that contains:
+- ```BN_module_res$beta_tuning$value``` trace of hyperparameter beta tuning,
+- ```BN_module_res$beta_tuning$len``` trace of width of the sampling interval for hyperparameter $\beta$.
 
 ## Part 4: MCMC diagnostics
 
