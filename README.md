@@ -91,7 +91,7 @@ omics$cnv[1:5,1:5]
 #> TCGA-F4-6570       -0.002         0.005         0.223         0.003         0.009
 ```
 These copy number values represent segment mean values equal to $log_2(\frac{copy-number}{2})$.
-The column names of omics\$cnv matrix must be entrez ID in the format entrezid:XXXX.
+The column names of ```omics$cnv``` matrix must be entrez ID in the format entrezid:XXXX.
 In the omics$cnv matrix, define only columns with available CNV data.
 
 ```ruby
