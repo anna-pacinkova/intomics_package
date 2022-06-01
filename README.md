@@ -173,7 +173,7 @@ OMICS_module_res <- OMICS_module(omics = omics, PK = PK, layers_def = layers_def
 This function returns several outputs:
 ```ruby
 names(OMICS_module_res)
-``
+```
 
 ```diff
 #> "pf_UB_BGe_pre"       "B_prior_mat"         "annot"               "omics"               "layers_def"          "omics_meth_original"
