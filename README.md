@@ -25,11 +25,10 @@ For further details, see manuscript [Pacinkova \& Popovici, 2022](https://assets
 
 
 # Installation
-
-<pre><code>
+```ruby
 install_github("anna-pacinkova/intomics_package")  
 library(devtools)
-</code></pre>
+```
 
 # Usage
 
