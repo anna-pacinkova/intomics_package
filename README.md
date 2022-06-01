@@ -281,14 +281,14 @@ ggraph(res_weighted$net_weighted, layout = 'dh') +
 
 Edges highlighted in blue are known from the biological prior knowledge. 
 The edge labels reflects its empirical frequency over the final set of CPDAGs.
-GE node names are in upper case, CNV node names are in lower case, METH node names are the same as DNA methylation probe names in omics$meth matrix.  
+GE node names are in upper case, CNV node names are in lower case, METH node names are the same as DNA methylation probe names in ```omics$meth``` matrix.  
 
 Node colours legend:
 ```ruby
 legend_custom(net = res_weighted)
 ```
 <p align="center">
-<img src="vignettes/figures/fin_net_legend.svg" width="350" height="350">
+<img src="vignettes/figures/fin_net_legend.svg" width="400" height="400">
 </p>
 Node colour scales are given by GE/CNV/METH values of all features from the corresponding input data matrix.  
 
