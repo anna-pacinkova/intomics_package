@@ -182,9 +182,9 @@ names(OMICS_module_res)
 1. ```OMICS_module_res$pf_UB_BGe_pre``` is a list that contains:
 - ```OMICS_module_res$pf_UB_BGe_pre$partition_func_UB``` the upper bound of the partition function for hyperparameter 
 $\beta = 0$,
-- ```OMICS_module_res$pf_UB_BGe_pre$partition_func_UB``` all possible parent set configuration for given node,
-- ```OMICS_module_res$pf_UB_BGe_pre$partition_func_UB``` energy for given parent set configurations,
-- ```OMICS_module_res$pf_UB_BGe_pre$partition_func_UB``` BGe score for given parent set configurations.  
+- ```OMICS_module_res$pf_UB_BGe_pre$parents_set_combinations``` all possible parent set configuration for given node,
+- ```OMICS_module_res$pf_UB_BGe_pre$energy_all_configs_node``` energy for given parent set configurations,
+- ```OMICS_module_res$pf_UB_BGe_pre$BGe_score_all_configs_node``` BGe score for given parent set configurations.  
 2. ```OMICS_module_res$B_prior_mat``` is a biological prior matrix.
 3. ```OMICS_module_res$annot``` contains DNA methylation probes that passed the filter.  
 4. ```OMICS_module_res$omics``` is a list with gene expression, copy number variation and normalised methylation data (possibly filtered if we use "lm_METH = TRUE").
