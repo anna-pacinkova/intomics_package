@@ -205,6 +205,16 @@ BN_module_res <- BN_module(burn_in = 100000,
 ```
 There are two optional arguments: "len" specifies the initial width of the sampling interval for hyperparameter $\beta$. However, this parameter will be tuned during the adaptive phases of the MCMC algorithm. "prob_mbr" specifies the probability of the MBR step (default = TRUE). We strongly recommend to use the default setting (for further details on how this argument affects MCMC scheme results, see [Su and Borsuk, 2016](https://jmlr.org/papers/volume17/su16a/su16a.pdf)).
 
+Let's check the outputs of BN_module function:
+```ruby
+names(BN_module_res)
+```
+```diff
+#> "B_prior_mat_weighted" "sampling.phase_res"   "beta_tuning"
+```
+1. ```BN_module_res$B_prior_mat_weighted``` is empirical biological knowledge matrix. Interactions from the biological prior knowledge and TFs-target interactions are constant (if "TFBS_belief" is not equal to "woPKGE_belief").
+2. ```BN_module_res$sampling.phase_res``` is a biological prior matrix.
+3. ```BN_module_res$beta_tuning``` contains DNA methylation probes that passed the filter. 
 
 ## Part 4: MCMC diagnostics
 
