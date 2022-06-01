@@ -38,7 +38,7 @@ We choose the set of 7 genes from the [KEGG Colorectal cancer pathway](https://w
 
 
 ## Part 1: Input data
-<pre><code>
+```ruby
 library(knitr)
 library(IntOMICS)
 library(bestNormalize)
@@ -50,7 +50,7 @@ library(matrixStats)
 suppressMessages(library(igraph))
 suppressMessages(library(ggraph))
 suppressMessages(library(bnstruct))
-</code></pre>
+```
 
 IntOMICS framework takes as input:  
   
@@ -65,9 +65,9 @@ IntOMICS framework takes as input:
 All data matrices are sampled from the same individuals.  
 
 Available omics data in the example TCGA COAD MSI dataset are gene expression (GE) of 7 genes + copy number variation (CNV) of 7 genes + beta value of 115 DNA methylation (METH) probes:
-<pre><code>
+```ruby
 omics$ge[1:5,1:5]
-</code></pre>
+```
 ```diff
 #>              ENTREZID:673 ENTREZID:3845 ENTREZID:4609 ENTREZID:5604 ENTREZID:5594
 #> TCGA-A6-5661     5.626990      5.718158      5.418139      4.569792      7.248533
@@ -79,9 +79,9 @@ omics$ge[1:5,1:5]
 These values correspond to normalised RNA-seq data. 
 However, the user is not limited to this platform. Another assay, such as microarray data, can be used. The column names of omics$ge matrix must be entrez ID in the format ENTREZID:XXXX.
 
-<pre><code>
+```ruby
 omics$cnv[1:5,1:5]
-</code></pre>
+```
 ```diff
 #>              entrezid:673 entrezid:3845 entrezid:4609 entrezid:5604 entrezid:5594
 #> TCGA-A6-5661        0.008         0.004        -0.004         0.003        -0.004
