@@ -36,6 +36,7 @@ We choose the set of 7 genes from the [KEGG Colorectal cancer pathway](https://w
 
 ## Part 1: Input data
 ```ruby
+# load required libraries
 library(knitr)
 library(IntOMICS)
 library(bestNormalize)
