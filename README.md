@@ -18,7 +18,7 @@ The resulting regulatory network structure contains the edge weights $w_i$ repre
   <img src="vignettes/figures/IntOMICS_framework_METH_empB.png" width="300" height="450" alt="IntOMICS framework">
 </p>
      
-For further details, see manuscript [Pacinkova \& Popovici, 2022](https://assets.researchsquare.com/files/rs-1291540/v1_covered.pdf?c=1643735189). 
+For further details about the IntOMICS algorithm, its performance and benchmark analysis, see manuscript [Pacinkova \& Popovici, 2022](https://assets.researchsquare.com/files/rs-1291540/v1_covered.pdf?c=1643735189). 
 
 
 # Installation
