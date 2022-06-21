@@ -204,8 +204,8 @@ This step can be time-consuming (you can skip it and use the pre-computed result
 ```ruby
 BN_module_res <- BN_module(burn_in = 100000, 
                            thin = 500, 
-                           seed1 = 1001,
-                           seed2 = 2002,
+                           seed1 = 8881,
+                           seed2 = 9992,
                            OMICS_module_res = OMICS_module_res,
                            minseglen = 50000)
 ```
