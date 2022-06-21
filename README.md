@@ -168,33 +168,33 @@ There are several other arguments: "woPKGE_belief" (default = 0.5) refers to the
 Note that all interactions with belief equal to "woPKGE_belief" in biological prior knowledge will be updated in empirical biological knowledge.
 
 ```ruby
-OMICS_module_res <- OMICS_module(omics = omics, 
-                                 PK = PK, 
-                                 layers_def = layers_def, 
-                                 annot = annot, 
-                                 r_squared_thres = 0.1, 
-                                 lm_METH = TRUE)
+OMICS_mod_res <- OMICS_module(omics = omics, 
+                              PK = PK, 
+                              layers_def = layers_def, 
+                              annot = annot, 
+                              r_squared_thres = 0.1, 
+                              lm_METH = TRUE)
 ```
 
 This function returns several outputs:
 ```ruby
-names(OMICS_module_res)
+names(OMICS_mod_res)
 ```
 
 ```diff
 #> "pf_UB_BGe_pre"       "B_prior_mat"         "annot"               "omics"               "layers_def"          "omics_meth_original"
 ```
 
-1. ```OMICS_module_res$pf_UB_BGe_pre``` is a list that contains:
-- ```OMICS_module_res$pf_UB_BGe_pre$partition_func_UB``` the upper bound of the partition function for hyperparameter 
+1. ```OMICS_mod_res$pf_UB_BGe_pre``` is a list that contains:
+- ```OMICS_mod_res$pf_UB_BGe_pre$partition_func_UB``` the upper bound of the partition function for hyperparameter 
 $\beta = 0$,
-- ```OMICS_module_res$pf_UB_BGe_pre$parents_set_combinations``` all possible parent set configuration for given node,
-- ```OMICS_module_res$pf_UB_BGe_pre$energy_all_configs_node``` energy for given parent set configurations,
-- ```OMICS_module_res$pf_UB_BGe_pre$BGe_score_all_configs_node``` BGe score for given parent set configurations.  
-2. ```OMICS_module_res$B_prior_mat``` is a biological prior matrix.
-3. ```OMICS_module_res$annot``` contains DNA methylation probes that passed the filter.  
-4. ```OMICS_module_res$omics``` is a list with gene expression, copy number variation and normalised methylation data (possibly filtered if we use "lm_METH = TRUE").
-5. ```OMICS_module_res$omics_meth_original``` the original methylation data.
+- ```OMICS_mod_res$pf_UB_BGe_pre$parents_set_combinations``` all possible parent set configuration for given node,
+- ```OMICS_mod_res$pf_UB_BGe_pre$energy_all_configs_node``` energy for given parent set configurations,
+- ```OMICS_mod_res$pf_UB_BGe_pre$BGe_score_all_configs_node``` BGe score for given parent set configurations.  
+2. ```OMICS_mod_res$B_prior_mat``` is a biological prior matrix.
+3. ```OMICS_mod_res$annot``` contains DNA methylation probes that passed the filter.  
+4. ```OMICS_mod_res$omics``` is a list with gene expression, copy number variation and normalised methylation data (possibly filtered if we use "lm_METH = TRUE").
+5. ```OMICS_mod_res$omics_meth_original``` the original methylation data.
 
 
 ## Part 3: MCMC simulation
@@ -202,29 +202,29 @@ $\beta = 0$,
 Now, we can use the automatically tuned MCMC algorithm (Yang and Rosenthal, 2017) to estimate model parameters and empirical biological knowledge and the conventional MCMC algorithm with additional Markov blanket resampling step (Su and Borsuk, 2016) to infer regulatory network structure consisting of three types of nodes: GE, CNV and METH nodes. 
 This step can be time-consuming (you can skip it and use the pre-computed result -> R object ```BN_module_res```).
 ```ruby
-BN_module_res <- BN_module(burn_in = 100000, 
-                           thin = 500, 
-                           seed1 = 8881,
-                           seed2 = 9992,
-                           OMICS_module_res = OMICS_module_res,
-                           minseglen = 50000)
+BN_mod_res <- BN_module(burn_in = 100000, 
+                        thin = 500, 
+                        seed1 = 8881,
+                        seed2 = 9992,
+                        OMICS_mod_res = OMICS_mod_res,
+                        minseglen = 50000)
 ```
 There are two optional arguments: "len" specifies the initial width of the sampling interval for hyperparameter $\beta$. However, this parameter will be tuned during the adaptive phases of the MCMC algorithm. "prob_mbr" specifies the probability of the MBR step (default = TRUE). We strongly recommend to use the default setting (for further details on how this argument affects MCMC scheme results, see [Su and Borsuk, 2016](https://jmlr.org/papers/volume17/su16a/su16a.pdf)).
 
 Let's check the outputs of BN_module function:
 ```ruby
-names(BN_module_res)
+names(BN_mod_res)
 ```
 ```diff
 #> "B_prior_mat_weighted" "sampling.phase_res"   "beta_tuning"
 ```
-1. ```BN_module_res$B_prior_mat_weighted``` is empirical biological knowledge matrix. Interactions from the biological prior knowledge and TFs-target interactions are constant (if "TFBS_belief" is not equal to "woPKGE_belief").
-2. ```BN_module_res$sampling.phase_res``` is a named list with results from the last sampling phase of the algorithm:
-- ```BN_module_res$sampling.phase_res$rms``` trace of root mean square used for c_rms measure to evaluate the convergence of MCMC simulation,
-- ```BN_module_res$sampling.phase_res$mcmc_sim_part_res``` contains CPDAGs of two independent MCMC simulations (for details see [Pacinkova \& Popovici, 2022](https://assets.researchsquare.com/files/rs-1291540/v1_covered.pdf?c=1643735189)).
-4. ```BN_module_res$beta_tuning``` is a named list for each iteration of adaptive phases that contains:
-- ```BN_module_res$beta_tuning$value``` trace of hyperparameter beta tuning,
-- ```BN_module_res$beta_tuning$len``` trace of width of the sampling interval for hyperparameter $\beta$.
+1. ```BN_mod_res$B_prior_mat_weighted``` is empirical biological knowledge matrix. Interactions from the biological prior knowledge and TFs-target interactions are constant (if "TFBS_belief" is not equal to "woPKGE_belief").
+2. ```BN_mod_res$sampling.phase_res``` is a named list with results from the last sampling phase of the algorithm:
+- ```BN_mod_res$sampling.phase_res$rms``` trace of root mean square used for c_rms measure to evaluate the convergence of MCMC simulation,
+- ```BN_mod_res$sampling.phase_res$mcmc_sim_part_res``` contains CPDAGs of two independent MCMC simulations (for details see [Pacinkova \& Popovici, 2022](https://assets.researchsquare.com/files/rs-1291540/v1_covered.pdf?c=1643735189)).
+4. ```BN_mod_res$beta_tuning``` is a named list for each iteration of adaptive phases that contains:
+- ```BN_mod_res$beta_tuning$value``` trace of hyperparameter beta tuning,
+- ```BN_mod_res$beta_tuning$len``` trace of width of the sampling interval for hyperparameter $\beta$.
 
 ## Part 4: MCMC diagnostics
 
@@ -251,13 +251,13 @@ The parameter "edge_freq_thres" determines the quantile of all edge weights used
 The parameter "gene_ID" determines the IDs used in the final network. There are two options: "gene_symbol" (default) or "entrezID".
 If you have changed the default value of the "TFBS_belief" argument in the ```OMICS_module``` function, you have to use the same argument in ```trace_plots``` function.
 ```ruby
-res_weighted <- trace_plots(mcmc_res = BN_module_res, 
+res_weighted <- trace_plots(mcmc_res = BN_mod_res, 
                             figures_dir = "figures/MSI/", 
                             burn_in = 100000, 
                             thin = 500, 
                             gene_annot = gene_annot, 
                             PK = PK, 
-                            OMICS_module_res = OMICS_module_res,
+                            OMICS_mod_res = OMICS_mod_res,
                             gene_ID = "gene_symbol", 
                             edge_freq_thres = 0.5,
                             TFtargs = TFtarg_mat)
@@ -295,13 +295,13 @@ Node colour scales are given by GE/CNV/METH values of all features from the corr
 
 We can also change the edge labels to inspect the empirical prior knowledge inferred by IntOMICS using the argument "edge_weights = empB" (default = MCMC_freq):
 ```ruby
-res_weighted <- trace_plots(mcmc_res = BN_module_res, 
+res_weighted <- trace_plots(mcmc_res = BN_mod_res, 
                             figures_dir = "figures/MSI/", 
                             burn_in = 100000, 
                             thin = 500, 
                             gene_annot = gene_annot, 
                             PK = PK, 
-                            OMICS_module_res = OMICS_module_res, 
+                            OMICS_mod_res = OMICS_mod_res, 
                             gene_ID = "gene_symbol", 
                             edge_freq_thres = 0.5, 
                             edge_weights = "empB",
@@ -321,8 +321,8 @@ ggraph(res_weighted$net_weighted, layout = 'dh') +
 
 Function ```empB_heatmap``` can be used to check the difference between empirical biological knowledge and biological prior knowledge of GE-GE interactions:
 ```ruby
-empB_heatmap(BN_module_res = BN_module_res, 
-             OMICS_module_res = OMICS_module_res, 
+empB_heatmap(BN_mod_res = BN_mod_res, 
+             OMICS_mod_res = OMICS_mod_res, 
              gene_annot = gene_annot, 
              TFtargs = TFtarg_mat)
 ```
