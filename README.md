@@ -172,7 +172,7 @@ OMICS_module_res <- OMICS_module(omics = omics,
                                  PK = PK, 
                                  layers_def = layers_def, 
                                  annot = annot, 
-                                 r_squared_thres = 0.3, 
+                                 r_squared_thres = 0.1, 
                                  lm_METH = TRUE)
 ```
 
