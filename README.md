@@ -31,7 +31,7 @@ library(devtools)
 
 This tutorial will show you how to use the IntOMICS package with a toy example.
 The example dataset consisting of processed gene expression and DNA methylation (Illumina Infinium HumanMethylation450 BeadChip) is from [the TCGA data portal](https://portal.gdc.cancer.gov/): 30 colon cancer samples (COAD) with microsatellite instability (MSI). The copy number variation of the associated genes from TCGA-COAD samples were downloaded from [the Broad Institute GDAC Firehose](https://gdac.broadinstitute.org/).
-We choose the set of 7 genes from the [KEGG Colorectal cancer pathway](https://www.genome.jp/pathway/hsa05210).
+We choose the set of 8 genes from the [KEGG Colorectal cancer pathway](https://www.genome.jp/pathway/hsa05210).
 
 
 ## Part 1: Input data
