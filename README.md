@@ -30,7 +30,7 @@ library(devtools)
 # Usage
 
 This tutorial will show you how to use the IntOMICS package with a toy example.
-The example dataset is from [the TCGA data portal](https://portal.gdc.cancer.gov/): 30 colon cancer samples (COAD) with microsatellite instability (MSI).
+The example dataset consisting of processed gene expression and DNA methylation (Illumina Infinium HumanMethylation450 BeadChip) is from [the TCGA data portal](https://portal.gdc.cancer.gov/): 30 colon cancer samples (COAD) with microsatellite instability (MSI). The copy number variation of the associated genes from TCGA-COAD samples were downloaded from the Broad Institute GDAC Firehose (https://gdac.broadinstitute.org/; accessed 30 December 2020).
 We choose the set of 7 genes from the [KEGG Colorectal cancer pathway](https://www.genome.jp/pathway/hsa05210).
 
 
@@ -58,8 +58,10 @@ IntOMICS framework takes as input:
   
 * associated DNA methylation matrix of beta-values $METH$ ($m$ samples and $n_3$ features, $m$ x $n_3$),
   
-* data.frame including all known interactions between molecular features (information from public available databases such as KEGG ([Ogata et al., 1999](https://academic.oup.com/nar/article/27/1/29/1238108?login=true)) or REACTOME ([Wu \& Haw, 2017](https://link.springer.com/protocol/10.1007/978-1-4939-6783-4_11))). However, any other source of prior knowledge can be used.  
-  
+* data.frame including all known interactions between molecular features (information from public available databases such as KEGG ([Ogata et al., 1999](https://academic.oup.com/nar/article/27/1/29/1238108?login=true)) or REACTOME ([Wu \& Haw, 2017](https://link.springer.com/protocol/10.1007/978-1-4939-6783-4_11))). However, any other source of prior knowledge can be used.
+
+* logical matrix with known transcription factors (TFs) and its targets (information from public available databases such as ENCODE ([ENCODE Project Consortium, 2004](https://pubmed.ncbi.nlm.nih.gov/15499007/)). However, any other source of prior knowledge can be used.
+
 All data matrices are sampled from the same individuals.  
 
 Available omics data saved in a names list ```omics``` in the example TCGA COAD MSI dataset are gene expression (GE) of 7 genes + copy number variation (CNV) of 7 genes + beta value of 115 DNA methylation (METH) probes:
