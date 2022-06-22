@@ -15,7 +15,7 @@ with information on known interactions among molecular features.
 The resulting regulatory network structure contains the edge weights $w_i$ representing the empirical frequency of given edge over samples of network structures from two independent MCMC simulations.
 
 <p align="center">
-  <img src="vignettes/figures/IntOMICS_framework_METH_empB_modules.png" width="400" height="600" alt="IntOMICS framework">
+  <img src="vignettes/figures/IntOMICS_framework_METH_empB_modules.png" width="400" height="680" alt="IntOMICS framework">
 </p>
      
 For further details about the IntOMICS algorithm, its performance and benchmark analysis, see manuscript [Pacinkova \& Popovici, 2022](https://assets.researchsquare.com/files/rs-1291540/v1_covered.pdf?c=1643735189). 
