@@ -220,8 +220,8 @@ This step can be time-consuming (you can skip it and use the pre-computed result
 ```ruby
 BN_mod_res <- BN_module(burn_in = 100000, 
                         thin = 500, 
-                        seed1 = 8881,
-                        seed2 = 9992,
+                        seed1 = 101,
+                        seed2 = 505,
                         OMICS_mod_res = OMICS_mod_res,
                         minseglen = 50000)
 ```
