@@ -154,7 +154,20 @@ PK
 #> EGFR tyrosine kinase inhibitor resistance.26 ENTREZID:5594 ENTREZID:4609   present
 #> EGFR tyrosine kinase inhibitor resistance.33 ENTREZID:5595 ENTREZID:4609   present
 ```
-```PK``` is the data.frame with biological prior knowledge. Column names are "src_entrez" (the parent node), "dest_entrez" (the child node) and "edge_type" (the prior knowledge about the direct interaction between parent and child node; the allowed values are "present" or "missing").
+```PK``` is the data.frame with biological prior knowledge about known interactions between features. Column names are "src_entrez" (the parent node), "dest_entrez" (the child node) and "edge_type" (the prior knowledge about the direct interaction between parent and child node; the allowed values are "present" or "missing").
+
+```ruby
+TFtarg_mat[1:5,1:5]
+```
+```diff
+#>                 ENTREZID:1820 ENTREZID:466 ENTREZID:1386 ENTREZID:467 ENTREZID:571
+#> ENTREZID:1                  1            0             0            0            0
+#> ENTREZID:503538             1            0             0            0            0
+#> ENTREZID:29974              1            0             0            0            0
+#> ENTREZID:2                  1            0             0            0            0
+#> ENTREZID:144568             0            0             1            0            0
+```
+```TFtarg_mat``` is the logical matrix with known transcription factors (TFs) and its targets. TFs are listed in columns, corresponding targets are listed in rows.
 
 
 ## Part 2: Data preprocessing
@@ -164,13 +177,14 @@ We also need to define all possible parent set configurations for each node.  Fo
 These functionalities are available through the ```OMICS_module``` function.  
 We can use linear regression to filter irrelevant DNA methylation probes. We set the parameter "lm_METH = TRUE".
 We can also specify the threshold for the R^2 to choose DNA methylation probes with significant coefficient using argument "r_squared_thres" (default = 0.3), or p-value using "p_val_thres" (default = 0.05).  
-There are several other arguments: "woPKGE_belief" (default = 0.5) refers to the belief concerning GE-GE interactions without prior knowledge, "nonGE_belief" (default = 0.5) refers to the belief concerning the belief concerning interactions of features except GE (e.g. CNV-GE, METH-GE), "TFBS_belief" refers to the belief concerning the transcription factor and its target interaction (default = 0.75).
+There are several other arguments: "woPKGE_belief" (default = 0.5) refers to the belief concerning GE-GE interactions without prior knowledge, "nonGE_belief" (default = 0.5) refers to the belief concerning the belief concerning interactions of features except GE (e.g. CNV-GE, METH-GE), "TFBS_belief" refers to the belief concerning the TF and its target interaction (default = 0.75).
 Note that all interactions with belief equal to "woPKGE_belief" in biological prior knowledge will be updated in empirical biological knowledge.
 
 ```ruby
 OMICS_mod_res <- OMICS_module(omics = omics, 
                               PK = PK, 
                               layers_def = layers_def, 
+                              TFtargs = TFtarg_mat,
                               annot = annot, 
                               r_squared_thres = 0.1, 
                               lm_METH = TRUE)
