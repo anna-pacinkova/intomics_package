@@ -107,7 +107,7 @@ omics$meth[1:5,1:5]
 ```
 These values represent DNA methylation beta values. The column names of the ```omics$meth``` matrix are probe IDs.  
 
-IntOMICS is designed to infer regulatory networks even if the copy number variation or DNA methylation data (or both) are not available.  
+IntOMICS is designed to infer regulatory networks even if the copy number variation or DNA methylation data (or both) are not available. In such a case, omics must be a named list with a single element (matrix with gene expression). 
 
 
 If methylation data are available, we have to provide an annotation:
