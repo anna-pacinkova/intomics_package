@@ -58,9 +58,9 @@ IntOMICS framework takes as input:
   
 * associated DNA methylation matrix of beta-values $METH$ ($m$ samples and $n_3$ features, $m$ x $n_3$),
   
-* data.frame including all known interactions between molecular features (information from public available databases such as KEGG ([Ogata et al., 1999](https://academic.oup.com/nar/article/27/1/29/1238108?login=true)) or REACTOME ([Wu \& Haw, 2017](https://link.springer.com/protocol/10.1007/978-1-4939-6783-4_11))). However, any other source of prior knowledge can be used.
+* data.frame including all known interactions between molecular features (information from public available databases such as KEGG ([Ogata et al., 1999](https://academic.oup.com/nar/article/27/1/29/1238108?login=true)) or REACTOME ([Wu \& Haw, 2017](https://link.springer.com/protocol/10.1007/978-1-4939-6783-4_11))). However, any other source of prior knowledge can be used. (IntOMICS is designed to run even if no PK is available, however, we highly recommend to use it.)
 
-* logical matrix with known transcription factors (TFs) and its targets (information from public available databases such as ENCODE ([ENCODE Project Consortium, 2004](https://pubmed.ncbi.nlm.nih.gov/15499007/)). However, any other source can be used.
+* logical matrix with known transcription factors (TFs) and its targets (information from public available databases such as ENCODE ([ENCODE Project Consortium, 2004](https://pubmed.ncbi.nlm.nih.gov/15499007/)). However, any other source can be used. (IntOMICS is designed to run even if no PK is available, however, we highly recommend to use it.)
 
 All data matrices are sampled from the same individuals.  
 
