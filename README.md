@@ -262,7 +262,7 @@ Once it is created, we can run the trace_plots function, which generates:
 <img src="vignettes/figures/convergence_RMS.svg" width="400" height="400">
 </p>
 
-The parameter "edge_freq_thres" determines the quantile of all edge weights used to filter only reliable edges (default = NULL, all edges will be considered as present). We recommend to use some edge weights filtering, such as 0.75 quantile of all edge weights in the resulting networks using "edge_freq_thres = 0.75".
+The parameter "edge_freq_thres" determines the quantile of all edge weights used to filter only reliable edges (default = NULL, all edges will be considered as present). For illustration, we use quite low edge weights filter to capture both CNV-GE and METH-GE interactions. We recommend to use some edge weights filtering, such as 0.75 quantile of all edge weights in the resulting networks using "edge_freq_thres = 0.75".
 The parameter "gene_ID" determines the IDs used in the final network. There are two options: "gene_symbol" (default) or "entrezID".
 If you have changed the default value of the "TFBS_belief" argument in the ```OMICS_module``` function, you have to use the same argument in ```trace_plots``` function.
 ```ruby
@@ -274,7 +274,7 @@ res_weighted <- trace_plots(mcmc_res = BN_mod_res,
                             PK = PK, 
                             OMICS_mod_res = OMICS_mod_res,
                             gene_ID = "gene_symbol", 
-                            edge_freq_thres = 0.5,
+                            edge_freq_thres = 0.4,
                             TFtargs = TFtarg_mat)
 ```
 
@@ -318,7 +318,7 @@ res_weighted <- trace_plots(mcmc_res = BN_mod_res,
                             PK = PK, 
                             OMICS_mod_res = OMICS_mod_res, 
                             gene_ID = "gene_symbol", 
-                            edge_freq_thres = 0.5, 
+                            edge_freq_thres = 0.4, 
                             edge_weights = "empB",
                             TFtargs = TFtarg_mat)
 
