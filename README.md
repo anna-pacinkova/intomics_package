@@ -23,7 +23,7 @@ For further details about the IntOMICS algorithm, its performance and benchmark 
 
 # Installation
 ```ruby
-library(devtools)
+library(remotes)
 install_github("anna-pacinkova/intomics_package")  
 library(IntOMICS)
 ```
