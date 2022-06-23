@@ -365,7 +365,7 @@ p <- ggplot(df, aes(x=edge_weight, y = ..scaled..)) +
 p+geom_vline(xintercept=q3, size=0.5, color="black", linetype = "dashed")
 ```
 <p align="center">
-<img src="vignettes/figures/edge_weights.svg" width="450" height="450">
+<img src="vignettes/figures/edge_weights.svg" width="300" height="300">
 </p>
 
 If you find a bug or have a comment let us know, please, via an e-mail: ana.pacinkova@gmail.com
