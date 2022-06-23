@@ -346,7 +346,7 @@ empB_heatmap(BN_mod_res = BN_mod_res,
 </p>
 Interactions with constant biological knowledge are highlighted in gray.
 
-Interesting could be also density of the edge weights inferred by IntOMICS, that can be plot using ```ggplot``` function. First of all, we have to use the ```trace_plots``` function withou the edge weights filtering:
+Interesting could be also density of the edge weights inferred by IntOMICS, that can be plot using ```ggplot``` function. First of all, we have to use the ```trace_plots``` function without the edge weights filtering:
 ```ruby
 res_weighted <- trace_plots(mcmc_res = BN_mod_res, 
                             figures_dir = "figures/MSI/", 
