@@ -60,7 +60,7 @@ IntOMICS framework takes as input:
   
 * data.frame including all known interactions between molecular features (information from public available databases such as KEGG ([Ogata et al., 1999](https://academic.oup.com/nar/article/27/1/29/1238108?login=true)) or REACTOME ([Wu \& Haw, 2017](https://link.springer.com/protocol/10.1007/978-1-4939-6783-4_11))). However, any other source of prior knowledge can be used.
 
-* logical matrix with known transcription factors (TFs) and its targets (information from public available databases such as ENCODE ([ENCODE Project Consortium, 2004](https://pubmed.ncbi.nlm.nih.gov/15499007/)). However, any other source of prior knowledge can be used.
+* logical matrix with known transcription factors (TFs) and its targets (information from public available databases such as ENCODE ([ENCODE Project Consortium, 2004](https://pubmed.ncbi.nlm.nih.gov/15499007/)). However, any other source can be used.
 
 All data matrices are sampled from the same individuals.  
 
