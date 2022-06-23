@@ -304,7 +304,7 @@ Node colours legend:
 legend_custom(net = res_weighted)
 ```
 <p align="center">
-<img src="vignettes/figures/fin_net_legend.svg" width="300" height="300">
+<img src="vignettes/figures/fin_net_legend.svg" width="400" height="400">
 </p>
 Node colour scales are given by GE/CNV/METH values of all features from the corresponding input data matrix.  
 
