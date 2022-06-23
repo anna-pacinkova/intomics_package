@@ -69,12 +69,12 @@ Available omics data saved in a names list ```omics``` in the example TCGA COAD 
 omics$ge[1:5,1:5]
 ```
 ```diff
-#>              ENTREZID:673 ENTREZID:3845 ENTREZID:4609 ENTREZID:5604 ENTREZID:5594
-#> TCGA-A6-5661     5.626990      5.718158      5.418139      4.569792      7.248533
-#> TCGA-AD-5900     3.268475      4.898989      7.867263      5.182608      6.054980
-#> TCGA-CM-4743     3.400621      5.468644      6.761254      5.418349      6.042386
-#> TCGA-G4-6586     3.480572      5.034181      6.888025      5.553441      6.143032
-#> TCGA-F4-6570     3.814445      4.634686      7.051842      4.906874      6.350766
+#>              ENTREZID:7482 ENTREZID:2535 ENTREZID:1857 ENTREZID:2932 ENTREZID:8312
+#> TCGA-A6-5661    5.04929458    -0.8516422      7.140874      6.444206      2.913619
+#> TCGA-AD-5900    1.35701918     1.4948136      5.588249      4.698387      5.800814
+#> TCGA-CM-4743   -0.10079261    -0.4195763      5.701181      5.145362      5.086909
+#> TCGA-G4-6586    0.07274478     0.5322971      5.537289      4.935165      5.591844
+#> TCGA-F4-6570   -0.21499097     1.2462155      5.794873      5.420462      5.361082
 ```
 These values correspond to normalised RNA-seq data. 
 However, the user is not limited to this platform. Another assay, such as microarray data, can be used. The column names of ```omics$ge``` matrix must be entrez ID in the format ENTREZID:XXXX.
@@ -83,12 +83,12 @@ However, the user is not limited to this platform. Another assay, such as microa
 omics$cnv[1:5,1:5]
 ```
 ```diff
-#>              entrezid:673 entrezid:3845 entrezid:4609 entrezid:5604 entrezid:5594
-#> TCGA-A6-5661        0.008         0.004        -0.004         0.003        -0.004
-#> TCGA-AD-5900       -0.001         0.507         0.749         0.000        -0.009
-#> TCGA-CM-4743        0.004        -0.004        -0.003        -0.003        -0.021
-#> TCGA-G4-6586       -0.023         0.004        -0.007         0.010        -0.003
-#> TCGA-F4-6570       -0.002         0.005         0.223         0.003         0.009
+#>              entrezid:7482 entrezid:2535 entrezid:1857 entrezid:2932 entrezid:8312
+#> TCGA-A6-5661         0.000         0.005         0.000         0.000        -0.010
+#> TCGA-AD-5900         0.000         0.001         0.009         0.002        -0.011
+#> TCGA-CM-4743         0.001        -0.014        -0.003        -0.003        -0.016
+#> TCGA-G4-6586         0.003         0.002        -0.001        -0.001         0.005
+#> TCGA-F4-6570         0.002         0.018         0.007         0.007         0.002
 ```
 These copy number values represent segment mean values equal to $log_2(\frac{copy-number}{2})$.
 The column names of ```omics$cnv``` matrix must be entrez ID in the format entrezid:XXXX.
@@ -98,12 +98,12 @@ In the ```omics$cnv``` matrix, define only columns with available CNV data.
 omics$meth[1:5,1:5]
 ```
 ```diff
-#>              cg06108510 cg07101782 cg17641046 cg25202636 cg03497419
-#> TCGA-A6-5661  0.6042037  0.5550869  0.6473482  0.5234418  0.5671736
-#> TCGA-AD-5900  0.5173069  0.4365084  0.6672522  0.5742973  0.4907275
-#> TCGA-CM-4743  0.4490056  0.3934676  0.5471020  0.4236996  0.4318266
-#> TCGA-G4-6586  0.6372390  0.6085915  0.7351724  0.6520927  0.6764021
-#> TCGA-F4-6570  0.6641252  0.6076128  0.6589021  0.5845556  0.6457823
+#>              cg08739433 cg11806528 cg14013390 cg08741842 cg10111629
+#> TCGA-A6-5661  0.5277487  0.4595131  0.9353342  0.6480896  0.9147693
+#> TCGA-AD-5900  0.5883163  0.5817354  0.8950541  0.5856380  0.7314535
+#> TCGA-CM-4743  0.4499933  0.4935660  0.9525694  0.7287386  0.8809010
+#> TCGA-G4-6586  0.5763992  0.5834095  0.9489423  0.7939009  0.8992803
+#> TCGA-F4-6570  0.5128817  0.5656870  0.9377459  0.6671709  0.8519091
 ```
 These values represent DNA methylation beta values. The column names of the ```omics$meth``` matrix are probe IDs.  
 
@@ -116,14 +116,12 @@ If methylation data are available, we have to provide an annotation:
 str(annot)
 ```
 ```diff
-#> List of 7
-#>  $ ENTREZID:4292: chr [1:6] "cg06108510" "cg07101782" "cg17641046" "cg25202636" ...
-#>  $ ENTREZID:5594: chr [1:19] "cg11335969" "cg23681311" "cg00014104" "cg00578437" ...
-#>  $ ENTREZID:5595: chr [1:10] "cg02286008" "cg05902503" "cg02521996" "cg05445914" ...
-#>  $ ENTREZID:3845: chr [1:29] "cg12990174" "cg20836156" "cg00584022" "cg02850821" ...
-#>  $ ENTREZID:4609: chr [1:40] "cg00163372" "cg08526705" "cg11688275" "cg15801573" ...
-#>  $ ENTREZID:673 : chr [1:19] "cg14094063" "cg20200035" "cg26956263" "cg01510153" ...
-#>  $ ENTREZID:5604: chr [1:21] "cg00098814" "cg05866062" "cg08161449" "cg11559852" ...
+#> List of 5
+#> $ ENTREZID:2932: chr [1:2] "cg14479617" "cg12588208"
+#> $ ENTREZID:8312: chr [1:2] "cg27308245" "cg26525629"
+#> $ ENTREZID:7482: chr "cg04571584"
+#> $ ENTREZID:1499: chr [1:3] "cg04180460" "cg06626556" "cg02247160"
+#> $ ENTREZID:2535: chr "cg09339219"
 ```
 ```annot``` is a named list. Each component of the list is a character vector and corresponds to probe IDs associated with a given gene. Names of the annot must be again in the format ENTREZID:XXXX.  
 
@@ -132,14 +130,15 @@ To generate comprehensive figures with gene IDs, we need to provide a gene annot
 gene_annot
 ```
 ```diff
-#>         entrezID gene_symbol
-#> 18  ENTREZID:673        BRAF
-#> 15 ENTREZID:3845        KRAS
-#> 24 ENTREZID:4609         MYC
-#> 26 ENTREZID:5604      MAP2K1
-#> 27 ENTREZID:5594       MAPK1
-#> 28 ENTREZID:5595       MAPK3
-#> 41 ENTREZID:4292        MLH1
+#>         entrezID gene_symbol   alias_KEGG
+#> 14 ENTREZID:7482       WNT2B          Wnt
+#> 21 ENTREZID:2535        FZD2     Frizzled
+#> 34 ENTREZID:1857        DVL3          DVL
+#> 35 ENTREZID:2932       GSK3B     GSK3beta
+#> 38 ENTREZID:8312       AXIN1         AXIN
+#> 40 ENTREZID:1499      CTNNB1 beta-catenin
+#> 36  ENTREZID:324         APC          APC
+#> 43 ENTREZID:6934      TCF7L2      TCF/LEF
 ```
 ```gene_annot``` is Gene ID conversion table with "entrezID" and "gene_symbol" column names. Gene symbols are used for the final regulatory network visualisation.  
 
@@ -148,13 +147,13 @@ And finally, the prior knowledge from any source chosen by the user:
 PK
 ```
 ```diff
-#>                                                 src_entrez   dest_entrez edge_type
-#> Long-term depression.144                      ENTREZID:673 ENTREZID:5604   present
-#> EGFR tyrosine kinase inhibitor resistance.18 ENTREZID:3845  ENTREZID:673   present
-#> EGFR tyrosine kinase inhibitor resistance.22 ENTREZID:5604 ENTREZID:5594   present
-#> EGFR tyrosine kinase inhibitor resistance.23 ENTREZID:5604 ENTREZID:5595   present
-#> EGFR tyrosine kinase inhibitor resistance.26 ENTREZID:5594 ENTREZID:4609   present
-#> EGFR tyrosine kinase inhibitor resistance.33 ENTREZID:5595 ENTREZID:4609   present
+#>                                                  src_entrez    dest_entrez edge_type
+#> Long-term depression.142                      ENTREZID:1855  ENTREZID:2932   present
+#> Long-term depression.143                      ENTREZID:8323  ENTREZID:1855   present
+#> Long-term depression.144                      ENTREZID:7477  ENTREZID:8323   present
+#> Long-term depression.167                      ENTREZID:4040  ENTREZID:8323   present
+#> Long-term depression.168                      ENTREZID:4041  ENTREZID:8323   present
+#> Long-term depression.169                       ENTREZID:324  ENTREZID:1499   present
 ```
 ```PK``` is the data.frame with biological prior knowledge about known interactions between features. Column names are "src_entrez" (the parent node), "dest_entrez" (the child node) and "edge_type" (the prior knowledge about the direct interaction between parent and child node; the allowed values are "present" or "missing").
 
@@ -309,7 +308,7 @@ legend_custom(net = res_weighted)
 </p>
 Node colour scales are given by GE/CNV/METH values of all features from the corresponding input data matrix.  
 
-We can also change the edge labels to inspect the empirical prior knowledge inferred by IntOMICS using the argument "edge_weights = empB" (default = MCMC_freq):
+We can also change the edge labels to inspect the empirical prior knowledge inferred by IntOMICS using the argument "edge_weights = empB" (default = "MCMC_freq"):
 ```ruby
 res_weighted <- trace_plots(mcmc_res = BN_mod_res, 
                             figures_dir = "figures/MSI/", 
