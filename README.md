@@ -147,13 +147,13 @@ And finally, the prior knowledge from any source chosen by the user:
 PK
 ```
 ```diff
-#>                                                  src_entrez    dest_entrez edge_type
-#> Long-term depression.142                      ENTREZID:1855  ENTREZID:2932   present
-#> Long-term depression.143                      ENTREZID:8323  ENTREZID:1855   present
-#> Long-term depression.144                      ENTREZID:7477  ENTREZID:8323   present
-#> Long-term depression.167                      ENTREZID:4040  ENTREZID:8323   present
-#> Long-term depression.168                      ENTREZID:4041  ENTREZID:8323   present
-#> Long-term depression.169                       ENTREZID:324  ENTREZID:1499   present
+#>      src_entrez   dest_entrez edge_type
+#> 1 ENTREZID:7482 ENTREZID:2535   present
+#> 2 ENTREZID:2535 ENTREZID:1857   present
+#> 3 ENTREZID:1857 ENTREZID:2932   present
+#> 4  ENTREZID:324 ENTREZID:1499   present
+#> 5  ENTREZID:324 ENTREZID:1857   present
+#> 6 ENTREZID:8312  ENTREZID:324   present
 ```
 ```PK``` is the data.frame with biological prior knowledge about known interactions between features. Column names are "src_entrez" (the parent node), "dest_entrez" (the child node) and "edge_type" (the prior knowledge about the direct interaction between parent and child node; the allowed values are "present" or "missing").
 
