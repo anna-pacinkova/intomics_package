@@ -336,7 +336,7 @@ ggraph(res_weighted$net_weighted, layout = 'dh') +
 
 Function ```empB_heatmap``` can be used to check the difference between empirical biological knowledge and biological prior knowledge of GE-GE interactions:
 ```ruby
-empB_heatmap(BN_mod_res = BN_mod_res, 
+empB_heatmap(mcmc_res = BN_mod_res, 
              OMICS_mod_res = OMICS_mod_res, 
              gene_annot = gene_annot, 
              TFtargs = TFtarg_mat)
