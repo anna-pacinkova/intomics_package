@@ -4,7 +4,19 @@
 \alias{B_prior_mat}
 \title{Biological prior matrix definition}
 \usage{
-B_prior_mat(omics, PK, layers_def, annot, r_squared_thres, lm_METH)
+B_prior_mat(
+  omics,
+  PK,
+  layers_def,
+  TFtargs,
+  annot,
+  lm_METH,
+  r_squared_thres,
+  p_val_thres,
+  TFBS_belief,
+  nonGE_belief,
+  woPKGE_belief
+)
 }
 \description{
 Biological prior matrix definition

@@ -11,9 +11,11 @@ trace_plots(
   figures_dir,
   gene_annot,
   PK,
-  OMICS_module_res,
+  OMICS_mod_res,
+  edge_weights = "MCMC_freq",
   edge_freq_thres = NULL,
-  gene_ID
+  gene_ID,
+  TFtargs
 )
 }
 \description{

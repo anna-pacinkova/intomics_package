@@ -4,7 +4,7 @@
 \alias{lm_meth}
 \title{Linear regression GE~METH}
 \usage{
-lm_meth(ge_mat, meth_mat, gene, meth_probes, r_squared_thres)
+lm_meth(ge_mat, meth_mat, gene, meth_probes, r_squared_thres, p_val_thres)
 }
 \description{
 \code{lm_meth} The linear regression model for a dependent variable GE and explanatory variable METH. Returns METH with significant coefficient, R^2 > threshold and R~Gaussian residuals.

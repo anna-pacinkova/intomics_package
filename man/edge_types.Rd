@@ -4,7 +4,16 @@
 \alias{edge_types}
 \title{Resulting network definition}
 \usage{
-edge_types(PK, gene_annot, edge_list, node_list, OMICS_module_res)
+edge_types(
+  mcmc_res,
+  PK,
+  gene_annot,
+  edge_list,
+  node_list,
+  OMICS_mod_res,
+  edge_weights,
+  TFtargs
+)
 }
 \description{
 \code{edge_types} Defines the resulting network structure and determines the color scale for each modality. This is part of trace_plots.

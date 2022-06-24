@@ -17,7 +17,8 @@ mcmc.simulation_sampling.phase(
   len,
   thin,
   counting,
-  energy_all_configs_node
+  energy_all_configs_node,
+  annot
 )
 }
 \description{

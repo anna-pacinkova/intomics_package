@@ -13,7 +13,8 @@ second_adapt_phase(
   prob_mbr,
   BGe_score_all_configs_node,
   parent_set_combinations,
-  annot
+  annot,
+  woPKGE_belief = 0.5
 )
 }
 \description{

@@ -6,11 +6,16 @@
 \usage{
 OMICS_module(
   omics,
-  PK,
+  PK = NULL,
   layers_def,
+  TFtargs = NULL,
   annot = NULL,
+  lm_METH = TRUE,
   r_squared_thres = 0.3,
-  lm_METH = TRUE
+  p_val_thres = 0.05,
+  TFBS_belief = 0.75,
+  nonGE_belief = 0.5,
+  woPKGE_belief = 0.5
 )
 }
 \description{

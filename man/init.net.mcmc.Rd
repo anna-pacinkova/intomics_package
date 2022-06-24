@@ -4,7 +4,7 @@
 \alias{init.net.mcmc}
 \title{Random initial network}
 \usage{
-init.net.mcmc(omics, seed, layers_def)
+init.net.mcmc(omics, seed, layers_def, B_prior_mat)
 }
 \description{
 \code{init.net.mcmc} This function is used to sample random initial network. The edges are sampled only between GE nodes.

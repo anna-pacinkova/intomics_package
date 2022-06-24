@@ -9,7 +9,7 @@ BN_module(
   thin,
   seed1,
   seed2,
-  OMICS_module_res,
+  OMICS_mod_res,
   minseglen,
   len = 5,
   prob_mbr = 0.07

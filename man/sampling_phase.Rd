@@ -13,7 +13,8 @@ sampling_phase(
   prob_mbr,
   thin,
   minseglen,
-  burn_in
+  burn_in,
+  annot
 )
 }
 \description{
