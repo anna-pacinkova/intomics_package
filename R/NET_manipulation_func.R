@@ -13,7 +13,7 @@ fan_in_reverse <- function(positions, net_layer_max, layers_def)
 #' @description
 #' `init.net.mcmc` This function is used to sample random initial network. The edges are sampled only between GE nodes.
 #' @export
-init.net.mcmc <- function(omics, seed, layers_def)
+init.net.mcmc <- function(omics, seed, layers_def, B_prior_mat)
 {
   empty.net <- matrix(0, nrow = sum(mapply(ncol,omics)), ncol = sum(mapply(ncol,omics)),dimnames = list(unlist(mapply(colnames,omics)),
                                                                                                         unlist(mapply(colnames,omics))))
@@ -22,6 +22,11 @@ init.net.mcmc <- function(omics, seed, layers_def)
 
   rownames(init.net@dag) <- rownames(empty.net)
   colnames(init.net@dag) <- rownames(empty.net)
+  init.net@dag <- init.net@dag[rownames(B_prior_mat),rownames(B_prior_mat)]
+  if(any(init.net@dag==1 & B_prior_mat==0))
+  {
+    init.net@dag[init.net@dag==1 & B_prior_mat==0] <- 0
+  }
   
   # if the initial network is not acyclic, we have to define the new one
   while(!is.acyclic(init.net@dag) | any(colSums(init.net@dag[colnames(omics[[layers_def$omics[1]]]),colnames(omics[[layers_def$omics[1]]])]) > layers_def$fan_in_ge[1]))
@@ -29,8 +34,12 @@ init.net.mcmc <- function(omics, seed, layers_def)
     init.net <- sample.chain(empty_net = empty.net, omics_ge = omics[[layers_def$omics[1]]])
     rownames(init.net@dag) <- rownames(empty.net)
     colnames(init.net@dag) <- rownames(empty.net)
+    init.net@dag <- init.net@dag[rownames(B_prior_mat),rownames(B_prior_mat)]
+    if(any(init.net@dag==1 & B_prior_mat==0))
+    {
+      init.net@dag[init.net@dag==1 & B_prior_mat==0] <- 0
+    }
   }
-  
   source.net <- list(adjacency = init.net@dag, nbhd.size = c(), proposal.distr = c(), energy = c(), prior = c(), BGe = c(), likelihood_part = c(), likelihood = c(), acceptance = c(), edge_move = c())
   return(list(source.net = source.net, empty.net = empty.net))
 }
@@ -343,248 +352,194 @@ parent_sets_sum_scores_X <- function(parent_set_combinations, selected_node, des
 #' @export
 MC3 <- function(source_net_adjacency, omics, layers_def, B_prior_mat, beta.source, partition_func_UB_beta_source, parent_set_combinations, BGe_score_all_configs_node, annot)
 {
-  dag.G.0 <- source_net_adjacency
-  mc3_edge <- NA
-  # Randomly select a node in current graph G
-  from <- sample(rownames(source_net_adjacency),1)
+  ge_nodes <- rownames(source_net$adjacency)[regexpr("ENTREZ", rownames(source_net$adjacency))>0]
+  vec <- 1:length(c(source_net$adjacency))
+  vec <- vec[c(B_prior_mat)>0]
+  edge_proposal_res <- edge_proposal(net = source_net$adjacency, candidates = vec, layers_def = layers_def, ge_nodes = ge_nodes, omics = omics, B_prior_mat = B_prior_mat)
   
-  if(regexpr("entrezid", from)>0)
+  while(edge_proposal_res$no_action | !is.acyclic(edge_proposal_res$net))
   {
-    to <- toupper(from)
-    if(dag.G.0[from,to]==0)
-    {
-      dag.G.0[from,to] <- 1
-      mc3_edge <- "add"
-    } else {
-      dag.G.0[from,to] <- 0
-      mc3_edge <- "delete"
-    } # end if else (dag.G.0[from,to]==0)
-    
-  } else if(regexpr("ENTREZID", from)>0){
-    ge_nodes <- colnames(omics[[layers_def$omics[1]]])
-    if(sum(source_net_adjacency[from,])==0)
-    {
-      # choose only those GE nodes with number of parents < layers_def$fan_in_ge[1]
-      GE_opts <- names(which(colSums(dag.G.0[ge_nodes,setdiff(ge_nodes,from)]) < layers_def$fan_in_ge[1]))
-      
-      if(identical(GE_opts, character(0)))
-      {
-        mc3_edge <- "delete"
-        # randomly choose an edge which will be deleted
-        edge_opts <- which(dag.G.0[ge_nodes,ge_nodes]==1)
-        dag.G.0[ge_nodes, ge_nodes][sample(edge_opts,1)] <- 0
-      } else {
-        to <- sample(setdiff(GE_opts, from), 1)
-        dag.G.0[from,to] <- 1
-        mc3_edge <- "add"
-      }# end if else (identical(GE_opts, character(0)))
-      
-      while(!is.acyclic(dag.G.0))
-      {
-        dag.G.0[from,to] <- 0
-        GE_opts <-setdiff(GE_opts, to)
-        
-        if(identical(GE_opts, character(0)))
-        {
-          mc3_edge <- "delete"
-          # randomly choose an edge which will be deleted
-          edge_opts <- which(dag.G.0[ge_nodes,ge_nodes]==1)
-          dag.G.0[ge_nodes, ge_nodes][sample(edge_opts,1)] <- 0
-        } else {
-          to <- sample(setdiff(GE_opts, from), 1)
-          dag.G.0[from,to] <- 1
-          mc3_edge <- "add"
-        }# end if else (identical(GE_opts, character(0)))
-      } # end while(!is.acyclic(dag.G.0))
-      
-    } else { # end if(sum(source_net_adjacency[from,])==0)
-      
-      if(sum(dag.G.0[ge_nodes,from])==layers_def$fan_in_ge[1])
-      {
-        mc3_edge <- sample(c("add","delete"),1)
-        if(mc3_edge=="delete")
-        {
-          dag.G.0[from, sample(names(which(dag.G.0[from,ge_nodes]==1)), 1)] <- 0
-        }
-        if(mc3_edge=="add")
-        {
-          GE_opts <- names(which(dag.G.0[from,setdiff(ge_nodes,from)]==0))
-          GE_opts <- intersect(GE_opts, names(which(colSums(dag.G.0[ge_nodes,GE_opts])<layers_def$fan_in_ge[1])))
-          
-          if(identical(GE_opts, character(0)) | is.null(GE_opts))
-          {
-            mc3_edge <- "delete"
-            # randomly choose an edge which will be deleted
-            edge_opts <- which(dag.G.0[ge_nodes,ge_nodes]==1)
-            dag.G.0[ge_nodes, ge_nodes][sample(edge_opts,1)] <- 0
-          } else{
-            to <- sample(GE_opts, 1)
-            dag.G.0[from, to] <- 1
-          }# end if else (identical(GE_opts, character(0)))
-          
-          while(!is.acyclic(dag.G.0))
-          {
-            dag.G.0[from, to] <- 0
-            GE_opts <- setdiff(GE_opts, to)
-            
-            if(identical(GE_opts, character(0)))
-            {
-              mc3_edge <- "delete"
-              # randomly choose an edge which will be deleted
-              edge_opts <- which(dag.G.0[ge_nodes,ge_nodes]==1)
-              dag.G.0[ge_nodes, ge_nodes][sample(edge_opts,1)] <- 0
-            } else {
-              to <- sample(GE_opts, 1)
-              dag.G.0[from, to] <- 1
-            }# end if else (identical(GE_opts, character(0)))
-          } # end while(!is.acyclic(dag.G.0))
-        } # end if(mc3_edge=="add")
-      } else {
-        mc3_edge <- sample(c("add","reverse","delete"),1)
-        if(mc3_edge=="delete")
-        {
-          to <- sample(names(which(dag.G.0[from,ge_nodes]==1)), 1)
-          dag.G.0[from, to] <- 0
-        }
-        if(mc3_edge=="add")
-        {
-          GE_opts <- names(which(dag.G.0[from,setdiff(ge_nodes,from)]==0))
-          GE_opts <- intersect(GE_opts, names(which(colSums(dag.G.0[ge_nodes, GE_opts, drop=FALSE]) < layers_def$fan_in_ge[1])))
-          
-          if(identical(GE_opts, character(0)) | is.null(GE_opts))
-          {
-            mc3_edge <- "delete" 
-            # randomly choose an edge which will be deleted
-            edge_opts <- which(dag.G.0[ge_nodes,ge_nodes]==1)
-            dag.G.0[ge_nodes, ge_nodes][sample(edge_opts,1)] <- 0
-          } else{
-            to <- sample(GE_opts, 1)
-            dag.G.0[from, to] <- 1
-          }# end if else (identical(GE_opts, character(0)) | is.null(GE_opts))
-          
-          while(!is.acyclic(dag.G.0))
-          {
-            dag.G.0[from, to] <- 0
-            GE_opts <- setdiff(GE_opts, to)
-            
-            if(identical(GE_opts, character(0)))
-            {
-              mc3_edge <- "delete"
-              # randomly choose an edge which will be deleted
-              edge_opts <- which(dag.G.0[ge_nodes,ge_nodes]==1)
-              dag.G.0[ge_nodes, ge_nodes][sample(edge_opts,1)] <- 0
-            } else {
-              to <- sample(GE_opts, 1)
-              dag.G.0[from, to] <- 1
-            }# end if else (identical(GE_opts, character(0)))
-          } # end while(!is.acyclic(dag.G.0))
-        } # end if(mc3_edge=="add")
-        if(mc3_edge=="reverse")
-        {
-          GE_opts <- names(which(dag.G.0[from,ge_nodes]==1))
-          to <- sample(GE_opts, 1)
-          dag.G.0[from, to] <- 0
-          dag.G.0[to, from] <- 1
-          while(!is.acyclic(dag.G.0))
-          {
-            dag.G.0[from, to] <- 1
-            dag.G.0[to, from] <- 0
-            GE_opts <- setdiff(GE_opts, to)
-            
-            if(identical(GE_opts, character(0)))
-            {
-              mc3_edge <- sample(c("add","delete"),1)
-              if(mc3_edge=="delete")
-              {
-                dag.G.0[from, sample(names(which(dag.G.0[from,ge_nodes]==1)), 1)] <- 0
-              } else {
-                GE_opts <- names(which(dag.G.0[from,setdiff(ge_nodes,from)]==0))
-                GE_opts <- intersect(GE_opts, names(which(colSums(dag.G.0[ge_nodes,GE_opts])<layers_def$fan_in_ge[1])))
-                
-                if(identical(GE_opts, character(0)))
-                {
-                  mc3_edge <- "delete"
-                  # randomly choose an edge which will be deleted
-                  edge_opts <- which(dag.G.0[ge_nodes,ge_nodes]==1)
-                  dag.G.0[ge_nodes, ge_nodes][sample(edge_opts,1)] <- 0
-                } else {
-                  to <- sample(GE_opts, 1)
-                  dag.G.0[from, to] <- 1 
-                }# end if else (identical(GE_opts, character(0)))
-                
-                while(!is.acyclic(dag.G.0))
-                {
-                  dag.G.0[from, to] <- 0
-                  GE_opts <- setdiff(GE_opts, to)
-                  
-                  if(identical(GE_opts, character(0)))
-                  {
-                    mc3_edge <- "delete"
-                    # randomly choose an edge which will be deleted
-                    edge_opts <- which(dag.G.0[ge_nodes,ge_nodes]==1)
-                    dag.G.0[ge_nodes, ge_nodes][sample(edge_opts,1)] <- 0
-                  } else {
-                    to <- sample(GE_opts, 1)
-                    dag.G.0[from, to] <- 1
-                  }# end if else (identical(GE_opts, character(0)))
-                } # end while(!is.acyclic(dag.G.0))
-              } # end if else (mc3_edge=="delete")
-            } else {
-              to <- sample(GE_opts, 1)
-              dag.G.0[from, to] <- 0
-              dag.G.0[to, from] <- 1
-            } # end if else (identical(GE_opts, character(0)))
-          } # end while(!is.acyclic(dag.G.0))
-        } # end if(mc3_edge=="reverse")
-      } # end if else sum(dag.G.0[ge_nodes,from])==layers_def$fan_in_ge[1]
-    } # end if else (sum(source_net_adjacency[from,])==0)
-  } else {
-    GE_opts <- names(which(mapply(FUN=function(char) any(char==from),annot)==TRUE))
-    fan_in_meth <- layers_def$fan_in_ge[names(which(mapply(FUN=function(l) any(colnames(l)==from),omics)==TRUE))]
-    if(is.na(fan_in_meth))
-    {
-      to <- sample(GE_opts, 1)
-      if(dag.G.0[from, to]==1)
-      {
-        dag.G.0[from, to] <- 0
-        mc3_edge <- "delete"
-      } else{
-        dag.G.0[from, to] <- 1
-        mc3_edge <- "add"
-      } # end if else (dag.G.0[from, to]==1)
-    } else {
-      ge_nodes <- colnames(omics[[layers_def$omics[1]]])
-      GE_opts <- intersect(GE_opts, names(which(colSums(dag.G.0[ge_nodes,GE_opts])<fan_in_meth)))
-      if(identical(GE_opts, character(0)) | is.null(GE_opts))
-      {
-        mc3_edge <- "delete"
-        # randomly choose an edge which will be deleted
-        edge_opts <- which(dag.G.0==1)
-        dag.G.0[sample(edge_opts,1)] <- 0
-       } else {
-        to <- sample(GE_opts, 1)
-        if(dag.G.0[from, to]==1)
-        {
-          dag.G.0[from, to] <- 0
-          mc3_edge <- "delete"
-        } else{
-          dag.G.0[from, to] <- 1
-          mc3_edge <- "add"
-        } # end if else (dag.G.0[from, to]==1)
-      }# end if else (identical(GE_opts, character(0)) | is.null(GE_opts))
-    } # end if else (is.na(layers_def$fan_in_ge[names(which(mapply(FUN=function(l) any(colnames(l)==from),omics)==TRUE))]))
-  }# end if else (regexpr("entrezid", from)>0)
+    vec <- vec[vec!=edge_proposal_res$edge]
+    edge_proposal_res <- edge_proposal(net = source_net$adjacency, candidates = vec, layers_def = layers_def, ge_nodes = ge_nodes, omics = omics, B_prior_mat = B_prior_mat)
+  } # end while(edge_proposal_res$no_action | !is.acyclic(edge_proposal_res$net))
 
-  nbhd.size <- neighborhood_size(net = dag.G.0, layers_def = layers_def, B_prior_mat = B_prior_mat, omics = omics)
+  if(edge_proposal_res$edge_move=="add")
+  {
+    parents_source_target <- names(which(source_net$adjacency[,edge_proposal_res$col]==1))
+    lp <- length(parents_source_target)
+    if(lp>0)
+    {
+      ind_BGe_source <- apply(parent_set_combinations[[colnames(source_net$adjacency)[edge_proposal_res$col]]][[lp]], 2, FUN=function(col) all(parents_source_target %in% col))
+      BGe_node_source <- BGe_score_all_configs_node[[colnames(source_net$adjacency)[edge_proposal_res$col]]][[lp]][ind_BGe_source]
+      ind_BGe_candidate <- apply(parent_set_combinations[[colnames(source_net$adjacency)[edge_proposal_res$col]]][[lp+1]], 2, FUN=function(col) length(intersect(c(parents_source_target,colnames(source_net$adjacency)[edge_proposal_res$row]),col))>lp)
+      BGe_node_candidate <- BGe_score_all_configs_node[[colnames(source_net$adjacency)[edge_proposal_res$col]]][[lp+1]][ind_BGe_candidate]
+    } else {
+      ind_BGe_source <- is.na(c(parent_set_combinations[[colnames(source_net$adjacency)[edge_proposal_res$col]]][[1]]))
+      BGe_node_source <- BGe_score_all_configs_node[[colnames(source_net$adjacency)[edge_proposal_res$col]]][[1]][ind_BGe_source]
+      ind_BGe_candidate <- apply(parent_set_combinations[[colnames(source_net$adjacency)[edge_proposal_res$col]]][[1]], 2, FUN=function(col) (colnames(source_net$adjacency)[edge_proposal_res$row] %in% col))
+      BGe_node_candidate <- BGe_score_all_configs_node[[colnames(source_net$adjacency)[edge_proposal_res$col]]][[1]][ind_BGe_candidate]
+    }# end if else (lp>0)
+    ### Marginal likelihood P(D|G) using BGe score:
+    BGe <- source_net$BGe - BGe_node_source + BGe_node_candidate
+  } else if (edge_proposal_res$edge_move=="delete")
+  {
+    parents_source_target <- names(which(source_net$adjacency[,edge_proposal_res$col]==1))
+    lp <- length(parents_source_target)
+    if(lp>1)
+    {
+      ind_BGe_source <- apply(parent_set_combinations[[colnames(source_net$adjacency)[edge_proposal_res$col]]][[lp]], 2, FUN=function(col) all(parents_source_target %in% col))
+      BGe_node_source <- BGe_score_all_configs_node[[colnames(source_net$adjacency)[edge_proposal_res$col]]][[lp]][ind_BGe_source]
+      ind_BGe_candidate <- apply(parent_set_combinations[[colnames(source_net$adjacency)[edge_proposal_res$col]]][[lp-1]], 2, FUN=function(col) length(intersect(setdiff(parents_source_target,colnames(source_net$adjacency)[edge_proposal_res$row]),col))==(lp-1))
+      BGe_node_candidate <- BGe_score_all_configs_node[[colnames(source_net$adjacency)[edge_proposal_res$col]]][[lp-1]][ind_BGe_candidate]
+    } else {
+      ind_BGe_source <- which(c(parent_set_combinations[[colnames(source_net$adjacency)[edge_proposal_res$col]]][[1]])==parents_source_target)
+      BGe_node_source <- BGe_score_all_configs_node[[colnames(source_net$adjacency)[edge_proposal_res$col]]][[1]][ind_BGe_source]
+      ind_BGe_candidate <- is.na(c(parent_set_combinations[[colnames(source_net$adjacency)[edge_proposal_res$col]]][[1]]))
+      BGe_node_candidate <- BGe_score_all_configs_node[[colnames(source_net$adjacency)[edge_proposal_res$col]]][[1]][ind_BGe_candidate]
+    } # end if else (lp>0)
+    ### Marginal likelihood P(D|G) using BGe score:
+    BGe <- source_net$BGe - BGe_node_source + BGe_node_candidate
+  } else {
+    # delete
+    parents_source_target <- names(which(source_net$adjacency[,edge_proposal_res$col]==1))
+    lp <- length(parents_source_target)
+    if(lp>1)
+    {
+      ind_BGe_source <- apply(parent_set_combinations[[colnames(source_net$adjacency)[edge_proposal_res$col]]][[lp]], 2, FUN=function(col) all(parents_source_target %in% col))
+      BGe_node_source <- BGe_score_all_configs_node[[colnames(source_net$adjacency)[edge_proposal_res$col]]][[lp]][ind_BGe_source]
+      ind_BGe_candidate <- apply(parent_set_combinations[[colnames(source_net$adjacency)[edge_proposal_res$col]]][[lp-1]], 2, FUN=function(col) length(intersect(setdiff(parents_source_target,colnames(source_net$adjacency)[edge_proposal_res$row]),col))==(lp-1))
+      BGe_node_candidate <- BGe_score_all_configs_node[[colnames(source_net$adjacency)[edge_proposal_res$col]]][[lp-1]][ind_BGe_candidate]
+    } else {
+      ind_BGe_source <- which(c(parent_set_combinations[[colnames(source_net$adjacency)[edge_proposal_res$col]]][[1]])==parents_source_target)
+      BGe_node_source <- BGe_score_all_configs_node[[colnames(source_net$adjacency)[edge_proposal_res$col]]][[1]][ind_BGe_source]
+      ind_BGe_candidate <- is.na(c(parent_set_combinations[[colnames(source_net$adjacency)[edge_proposal_res$col]]][[1]]))
+      BGe_node_candidate <- BGe_score_all_configs_node[[colnames(source_net$adjacency)[edge_proposal_res$col]]][[1]][ind_BGe_candidate]
+    } # end if else (lp>0)
+    ### Marginal likelihood P(D|G) using BGe score:
+    BGe <- source_net$BGe - BGe_node_source + BGe_node_candidate
+    # add
+    parents_candidate_target <- names(which(source_net$adjacency[,edge_proposal_res$row]==1))
+    lp <- length(parents_candidate_target)
+    if(lp>0)
+    {
+      ind_BGe_source <- apply(parent_set_combinations[[colnames(source_net$adjacency)[edge_proposal_res$row]]][[lp]], 2, FUN=function(col) all(parents_candidate_target %in% col))
+      BGe_node_source <- BGe_score_all_configs_node[[colnames(source_net$adjacency)[edge_proposal_res$row]]][[lp]][ind_BGe_source]
+      ind_BGe_candidate <- apply(parent_set_combinations[[colnames(source_net$adjacency)[edge_proposal_res$row]]][[lp+1]], 2, FUN=function(col) length(intersect(c(parents_candidate_target,colnames(source_net$adjacency)[edge_proposal_res$col]),col))>lp)
+      BGe_node_candidate <- BGe_score_all_configs_node[[colnames(source_net$adjacency)[edge_proposal_res$row]]][[lp+1]][ind_BGe_candidate]
+    } else {
+      ind_BGe_source <- is.na(c(parent_set_combinations[[colnames(source_net$adjacency)[edge_proposal_res$row]]][[1]]))
+      BGe_node_source <- BGe_score_all_configs_node[[colnames(source_net$adjacency)[edge_proposal_res$row]]][[1]][ind_BGe_source]
+      ind_BGe_candidate <- apply(parent_set_combinations[[colnames(source_net$adjacency)[edge_proposal_res$row]]][[1]], 2, FUN=function(col) length(intersect(colnames(source_net$adjacency)[edge_proposal_res$col],col))==1)
+      BGe_node_candidate <- BGe_score_all_configs_node[[colnames(source_net$adjacency)[edge_proposal_res$row]]][[1]][ind_BGe_candidate]
+    }# end if else (lp>0)
+    ### Marginal likelihood P(D|G) using BGe score:
+    BGe <- BGe - BGe_node_source + BGe_node_candidate
+  } # end if(edge_proposal_res$edge_move=="add") else if (edge_proposal_res$edge_move=="delete")
+  
+  # source_net_adjacency <- edge_proposal_res$net
+  nbhd.size <- neighborhood_size(net = edge_proposal_res$net, layers_def = layers_def, B_prior_mat = B_prior_mat, omics = omics)
   
   ## Prior probability P(G)
-  energy <- sum(epsilon(net = dag.G.0, B_prior_mat = B_prior_mat))
+  energy <- sum(epsilon(net = edge_proposal_res$net, B_prior_mat = B_prior_mat))
   prior <- (-beta.source$value*energy) - partition_func_UB_beta_source
   
-  ### Marginal likelihood P(D|G) using BGe score:
-  BGe <- BGe_score(adjacency_matrix = dag.G.0, omics = omics, layers_def = layers_def, parent_set_combinations = parent_set_combinations, BGe_score_all_configs_node = BGe_score_all_configs_node)
-  
   likelihood_part <- BGe + prior
+  # edge_move <- edge_proposal_res$edge_move
   
-  return(list(adjacency = dag.G.0, nbhd.size = nbhd.size, proposal.distr = c(), energy = energy, prior = prior, BGe = BGe, likelihood_part = likelihood_part, likelihood = c(), acceptance = c(), edge_move = mc3_edge))
+  return(list(adjacency = edge_proposal_res$net, nbhd.size = nbhd.size, proposal.distr = c(), energy = energy, prior = prior, BGe = BGe, likelihood_part = likelihood_part, likelihood = c(), acceptance = c(), edge_move = edge_proposal_res$edge_move))
 }
+
+#' Markov Chain conventional single edge proposal move with BGe score fixed
+#' @description
+#' `MC3` This function samples a conventional single edge proposal move.
+#' @export
+MC3_constantBGe <- function(source_net, omics, layers_def, B_prior_mat, beta.source, partition_func_UB_beta_source, parent_set_combinations, BGe_score_all_configs_node, annot)
+{
+  ge_nodes <- rownames(source_net$adjacency)[regexpr("ENTREZ", rownames(source_net$adjacency))>0]
+  vec <- 1:length(c(source_net$adjacency))
+  vec <- vec[c(B_prior_mat)>0]
+  edge_proposal_res <- edge_proposal(net = source_net$adjacency, candidates = vec, layers_def = layers_def, ge_nodes = ge_nodes, omics = omics, B_prior_mat = B_prior_mat)
+  
+  while(edge_proposal_res$no_action | !is.acyclic(edge_proposal_res$net))
+  {
+    vec <- vec[vec!=edge_proposal_res$edge]
+    edge_proposal_res <- edge_proposal(net = source_net$adjacency, candidates = vec, layers_def = layers_def, ge_nodes = ge_nodes, omics = omics, B_prior_mat = B_prior_mat)
+  } # end while(edge_proposal_res$no_action | !is.acyclic(edge_proposal_res$net))
+
+  # source_net_adjacency <- edge_proposal_res$net
+  nbhd.size <- neighborhood_size(net = edge_proposal_res$net, layers_def = layers_def, B_prior_mat = B_prior_mat, omics = omics)
+  
+  ## Prior probability P(G)
+  energy <- sum(epsilon(net = edge_proposal_res$net, B_prior_mat = B_prior_mat))
+  prior <- (-beta.source$value*energy) - partition_func_UB_beta_source
+  
+  likelihood_part <- source_net$BGe + prior
+  # edge_move <- edge_proposal_res$edge_move
+  
+  return(list(adjacency = edge_proposal_res$net, nbhd.size = nbhd.size, proposal.distr = c(), energy = energy, prior = prior, BGe = source_net$BGe, likelihood_part = likelihood_part, likelihood = c(), acceptance = c(), edge_move = edge_proposal_res$edge_move))
+}
+
+#' Markov Chain conventional single edge proposal move
+#' @description
+#' `edge_proposal` This function samples a conventional single edge proposal moves (identify those edges that are possible to change in given network structure)
+#' @export
+edge_proposal <- function(net, candidates, layers_def, ge_nodes, omics, B_prior_mat)
+{
+  edge <- sample(candidates,1)
+  div <- nrow(net)
+  
+  row <- edge %% div
+  if(row==0)
+  {
+    row <- div
+    col <- edge %/% div
+  } else {
+    col <- edge %/% div + 1
+  } # end if else (row==0)
+  no_action <- FALSE
+  
+  if(net[edge]==1)
+  {
+    if(B_prior_mat[col,row]>0 & sum(net[ge_nodes,row])<layers_def$fan_in_ge[which.max(layers_def$layer)])
+    {
+      edge_move <- sample(c("delete","reverse"),1)
+      if(edge_move=="delete")
+      {
+        net[edge] <- 0
+      } else {
+        net[col,row] <- 1
+        net[row,col] <- 0
+      } # end if else (edge_move=="delete")
+    } else {
+      edge_move <- "delete"
+      net[edge] <- 0
+    } # end if else ()
+  } else {
+    edge_move <- "add"
+    candidate_layer <- names(which(mapply(omics,FUN=function(mat) length(intersect(colnames(mat),rownames(net)[col]))==1)==TRUE))
+    if(candidate_layer==layers_def$omics[which.max(layers_def$layer)])
+    {
+      if(sum(net[ge_nodes,col])<layers_def$fan_in_ge[which.max(layers_def$layer)])
+      {
+        net[edge] <- 1
+      } else {
+        no_action <- TRUE
+      } # end if(source_net_adjacency[edge]==0 & sum(source_net_adjacency[ge_nodes,col])<layers_def$fan_in_ge[which.max(layers_def$layer)])
+    } else {
+      if(regexpr("entrez",rownames(net))>0)
+      {
+        # CNV
+        net[edge] <- 1
+      } else {
+        # METH
+        if(sum(net[colnames(omics[[candidate_layer]]),col])<layers_def$fan_in_ge[layers_def$omics==candidate_layer])
+        {
+          net[edge] <- 1
+        } else {
+          no_action <- TRUE
+        }
+      } # end if else (regexpr("entrez",rownames(net))>0)
+    } # end if else (candidate_layer==layers_def$omics[which.max(layers_def$layer)])
+  } # end if else (net[edge]==1)
+  return(list(net = net, edge = edge, no_action = no_action, row = row, col = col, edge_move = edge_move))
+} 

@@ -2,15 +2,21 @@
 #' @description
 #' `OMICS_module` data preprocessing + B_prior_mat definition + partition function upper bound estimation + all possible parent sets per node definition + BGe score computation for all possible parent sets
 #' @export
-OMICS_module <- function(omics, PK, layers_def, annot=NULL, r_squared_thres = 0.3, lm_METH = TRUE)
+OMICS_module <- function(omics, PK=NULL, layers_def, TFtargs=NULL, annot=NULL, lm_METH = TRUE, r_squared_thres = 0.3, p_val_thres = 0.05, TFBS_belief = 0.75, nonGE_belief = 0.5, woPKGE_belief = 0.5)
 {
+  if(TFBS_belief==woPKGE_belief)
+  {
+    message("Warning: GE-GE interactions without PK have the same belief as TFs-targets interactions. TFs-targets interactions will be considered as GE-GE interactions without prior knowledge.")
+  }
   
   # sort according to the layer number
   layers_def <- layers_def[order(layers_def$layer, decreasing = TRUE),]
   omics <- omics[layers_def$omics[order(layers_def$layer, decreasing = TRUE)]]
   
   # The biological prior matrix definition:
-  B <- B_prior_mat(omics = omics, PK = PK, layers_def = layers_def, annot = annot, r_squared_thres = r_squared_thres, lm_METH = lm_METH)
+  B <- B_prior_mat(omics = omics, PK = PK, layers_def = layers_def, annot = annot, 
+                   lm_METH = lm_METH, r_squared_thres = r_squared_thres, p_val_thres = p_val_thres, 
+                   TFtargs = TFtargs, TFBS_belief = TFBS_belief, nonGE_belief = nonGE_belief, woPKGE_belief = woPKGE_belief)
   
   # The upper bound of the partition function with beta_min = 0 (the resulting partition_func_UB is log transformed!)
   pf_UB_res <- pf_UB_est(omics = B$omics, layers_def = layers_def, B_prior_mat = B$B_prior_mat, annot = B$annot)
@@ -25,13 +31,40 @@ OMICS_module <- function(omics, PK, layers_def, annot=NULL, r_squared_thres = 0.
 
 #' Biological prior matrix definition
 #' @export
-B_prior_mat <- function(omics, PK, layers_def, annot, r_squared_thres, lm_METH)
+B_prior_mat <- function(omics, PK, layers_def, TFtargs, annot, lm_METH, r_squared_thres, p_val_thres, TFBS_belief, nonGE_belief, woPKGE_belief)
 {
   
   if(any(regexpr("ENTREZID:",colnames(omics[[layers_def$omics[1]]]))<0))
   {
   	stop("Gene names in GE matrix are not in the correct form. Please, use ENTREZID:XXXX.")
   } # end if(regexpr("ENTREZID:",colnames(omics[[layers_def$omics[1]]]))<0)
+  
+  if(!is.null(TFtargs))
+  {
+    if(any(regexpr("ENTREZID:",colnames(TFtargs))<0))
+    {
+      message("Gene names in TFtargs are not in the correct form. Please, use ENTREZID:XXXX.")
+    } # end if(any(regexpr("ENTREZID:",colnames(TFtargs))<0))
+  } # end if(!is.null(TFtargs))
+  
+  if(is.null(PK))
+  {
+      message("There in no PK. Please, consider adding PK to increase the IntOMICS prediction accuracy.")
+  } else {
+    if(is.list(omics))
+    {
+      if(length(intersect(c(PK$src_entrez,PK$dest_entrez),unlist(mapply(colnames,omics))))==0)
+      {
+        message("There are no valid PK interactions. Please, check if PK fits omics features.")
+      } # end if(length(intersect(c(PK$src_entrez,PK$dest_entrez),c(mapply(colnames,omics))))==0)
+    } else {
+      if(length(intersect(c(PK$src_entrez,PK$dest_entrez),colnames(omics)))==0)
+      {
+        message("There are no valid PK interactions. Please, check if PK fits omics features.")
+      } # end if(length(intersect(c(PK$src_entrez,PK$dest_entrez),c(mapply(colnames,omics))))==0)
+    } # end if else (is.list(omics))
+  } # end if else if(is.null(PK))
+  
   
   if(!all(sort(names(omics))==sort(layers_def$omics)))
   {
@@ -41,19 +74,30 @@ B_prior_mat <- function(omics, PK, layers_def, annot, r_squared_thres, lm_METH)
   # the first value indicates the belief of present nodes, the second value indicates the belief of absent nodes
   pk_belief <- c(1,0)
 
-  ## interactions from the last layer
+  ## interactions from the last layer (should be GE)
   features <- colnames(omics[[layers_def$omics[1]]])
 
-  # 0.5 denotes that we have not any information about the presence or absence of an edge
-  B_layer_max <- matrix(0.5, ncol=length(features), nrow=length(features), dimnames=list(features,features))
+  # woPKGE_belief value denotes that we have not any information about the presence of an edge
+  B_layer_max <- matrix(woPKGE_belief, ncol=length(features), nrow=length(features), dimnames=list(features,features))
   
+  # B_ij = 0.75 we have prior evidence that there is a directed edge pointing from node i to node j in TF targets database
+  TFs <- intersect(colnames(TFtargs),rownames(B_layer_max))
+  targets <- intersect(rownames(TFtargs),rownames(B_layer_max))
+  if(length(TFs)>0 & length(targets)>0)
+  {
+    TFtargs_spec <- matrix(TFtargs[targets, TFs], nrow = length(targets), dimnames=list(targets,TFs))
+    for(j in c(1:ncol(TFtargs_spec)))
+    {
+      B_layer_max[colnames(TFtargs_spec)[j],names(which(TFtargs_spec[,j]==1))] <- TFBS_belief
+    } # end for j
+  } # end if(length(TFs)>0 & length(targets)>0)
+
   # B_ij = 1 we have prior evidence that there is a directed edge pointing from node i to node j
   PK_present <- PK[PK$edge_type=="present",]
   PK_absent <- PK[PK$edge_type=="absent",]
-    
+  
   for(i in c(1:nrow(B_layer_max)))
   {
-    
     if (sum(PK_present$src_entrez==rownames(B_layer_max)[i]) != 0)
     {
       B_layer_max[rownames(B_layer_max)[i],intersect(PK_present[PK_present$src_entrez==rownames(B_layer_max)[i],"dest_entrez"],rownames(B_layer_max))] <- pk_belief[1]
@@ -81,8 +125,9 @@ B_prior_mat <- function(omics, PK, layers_def, annot, r_squared_thres, lm_METH)
         B_layer_lower <- matrix(0, ncol=ncol(B),
                                 nrow=length(features_lower), 
                                 dimnames=list(features_lower[match(colnames(B), toupper(features_lower), nomatch=0)],colnames(B)))
-        # CNV data: all possible interactions are set to 0.5
-        diag(B_layer_lower) <- 0.5
+        # CNV data: all possible interactions are set to 0.75
+        diag_sim <- match(toupper(rownames(B_layer_lower)),colnames(B_layer_lower))
+        B_layer_lower[cbind(1:length(features_lower), diag_sim)] <- nonGE_belief
         B_layer1 <- matrix(0, ncol=length(features_lower), nrow=nrow(B)+length(features_lower), 
                            dimnames=list(c(rownames(B), features_lower), rownames(B_layer_lower)))
         B <- cbind(rbind(B,B_layer_lower),B_layer1)
@@ -96,7 +141,7 @@ B_prior_mat <- function(omics, PK, layers_def, annot, r_squared_thres, lm_METH)
         
         if(lm_METH)
         {
-          new_annot <- lapply(seq_along(annot), function(list) lm_meth(omics[[layers_def$omics[1]]], omics[[layers_def$omics[j]]], names(annot)[[list]], annot[[list]], r_squared_thres))
+          new_annot <- lapply(seq_along(annot), function(list) lm_meth(omics[[layers_def$omics[1]]], omics[[layers_def$omics[j]]], names(annot)[[list]], annot[[list]], r_squared_thres = r_squared_thres, p_val_thres = p_val_thres))
           names(new_annot) <- names(annot)
         } else {
           new_annot <- annot
@@ -105,16 +150,14 @@ B_prior_mat <- function(omics, PK, layers_def, annot, r_squared_thres, lm_METH)
         if(sum(!mapply(is.null,new_annot))!=0)
         {
          new_annot <- new_annot[!mapply(is.null,new_annot)]
-         if(any(mapply(length,new_annot)>10)){print("WARNING: There are more than 10 methylation probes per gene. Consider some methylation probes filtering due to computational complexity.")}
-         
          features_lower <- unlist(new_annot)
          B_layer_lower <- matrix(0, ncol=ncol(B), 
                                  nrow=length(features_lower), 
                                  dimnames=list(features_lower,colnames(B)))
-         # METH data: all possible interactions from annot are set to 0.5
+         # METH data: all possible interactions from annot are set to 0.75
          for(a in c(1:length(new_annot)))
          {
-           B_layer_lower[intersect(features_lower,new_annot[[a]]),names(new_annot)[a]] <- 0.5
+           B_layer_lower[intersect(features_lower,new_annot[[a]]),names(new_annot)[a]] <- nonGE_belief
          } # end for a
          B_layer1 <- matrix(0, ncol=length(features_lower), nrow=nrow(B)+length(features_lower), 
                             dimnames=list(c(rownames(B), features_lower), rownames(B_layer_lower)))
@@ -218,7 +261,7 @@ flattenlist <- function(x){
 #' @description
 #' `lm_meth` The linear regression model for a dependent variable GE and explanatory variable METH. Returns METH with significant coefficient, R^2 > threshold and R~Gaussian residuals.
 #' @export
-lm_meth <- function(ge_mat, meth_mat, gene, meth_probes, r_squared_thres)
+lm_meth <- function(ge_mat, meth_mat, gene, meth_probes, r_squared_thres, p_val_thres)
 {
   meth_probes_sig <- c()
   if(length(meth_probes)>0)
@@ -228,7 +271,7 @@ lm_meth <- function(ge_mat, meth_mat, gene, meth_probes, r_squared_thres)
       res <- lm(ge_mat[,gene] ~ meth_mat[,meth_probes[f]])
       if(nrow(summary(res)$coefficients)>1)
       {
-        cond1 <- summary(res)$coefficients[2,"Pr(>|t|)"] < 0.05
+        cond1 <- summary(res)$coefficients[2,"Pr(>|t|)"] < p_val_thres
         cond2 <- summary(res)$r.squared > r_squared_thres
         cond3 <- shapiro.test(summary(res)$resid)$p.value > 0.1
         if(cond1 & cond2 & cond3)
@@ -252,12 +295,13 @@ pf_UB_est <- function(omics, B_prior_mat, layers_def, annot)
   # define all parents configurations
   comb_all <- foreach (i=1:ncol(omics[[layers_def$omics[1]]])) %do% {
     int_node <- colnames(omics[[layers_def$omics[1]]])[i]
+    potentials_layer <- intersect(rownames(B_prior_mat)[B_prior_mat[,int_node]>0],colnames(omics[[layers_def$omics[1]]]))
     comb_some <- list()
     
     ## GE all parents set combinations
     for(rep in c(1:layers_def$fan_in_ge[1]))
     {
-      comb_some[[rep]] <- combn(colnames(omics[[layers_def$omics[1]]])[-i],rep)
+      comb_some[[rep]] <- combn(potentials_layer,rep)
     } # end for rep
     
     # add empty parent sets
@@ -371,7 +415,7 @@ pf_UB_est <- function(omics, B_prior_mat, layers_def, annot)
   
   names(BGe_score_list) <- names(comb_all)
   
-  return(list(partition_func_UB = partition_func_UB, energy_all_configs_node = energy_all_configs_node, parents_set_combinations = comb_all, BGe_score_all_configs_node = BGe_score_list))
+  return(list(partition_func_UB = partition_func_UB, parents_set_combinations = comb_all, energy_all_configs_node = energy_all_configs_node, BGe_score_all_configs_node = BGe_score_list))
 }
 
 #' Range between 0 and 1
@@ -418,7 +462,12 @@ scoreparameters_BiDAG_BGe <- function (n,
   initparam$logedgepmat <- NULL
 
   N <- nrow(data)
-  covmat <- cov(data, use = "complete.obs") * (N - 1)
+  if(N==1)
+  {
+    covmat <- matrix(0,nrow=n, ncol=n, dimnames=list(initparam$labels.short,initparam$labels.short))
+  } else {
+    covmat <- cov(data, use = "complete.obs") * (N - 1)
+  } # end if else (N==1)
   means <- colMeans(data, na.rm = TRUE)
   bgepar$aw <- n + bgepar$am + 1
   

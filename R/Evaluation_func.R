@@ -2,26 +2,31 @@
 #' @description
 #' `trace_plots` Create trace plots of MCMC simulation and filter low reliable edges based on the edge_freq_thres parameter. Defines the resulting network structure and determines the color scale for each modality.
 #' @export
-trace_plots <- function(mcmc_res, burn_in, thin, figures_dir, gene_annot, PK, OMICS_module_res, edge_freq_thres = NULL, gene_ID)
+trace_plots <- function(mcmc_res, burn_in, thin, figures_dir, gene_annot, PK, OMICS_mod_res, edge_weights = "MCMC_freq", edge_freq_thres = NULL, gene_ID, TFtargs)
 {
+  if(!(edge_weights %in% c("MCMC_freq","empB")))
+  {
+    print('Warning: edge_weights argument must be either "MCMC_freq" or "empB".')  
+  }
+  
   if(!dir.exists(figures_dir)){dir.create(figures_dir)}
-
+  
   # Trace plot of beta values
   df1 <- data.frame(beta = mapply(mcmc_res$beta_tuning,FUN=function(x) x$value), k=1:length(mapply(mcmc_res$beta_tuning,FUN=function(x) x$value)), accept = 1)
-
+  
   # RMS strength (threshold)
   rms_strength <- abs(diff(mcmc_res$sampling.phase_res$rms))
   strength_threshold <- quantile(rms_strength, 0.75, na.rm = TRUE)
-
+  
   # custom.strength estimates the strength of each arc as its empirical frequency over a set of networks:
   cpdags1 <- unique(mcmc_res$sampling.phase_res$mcmc_sim_part_res$seed1$cpdags[(burn_in/thin+1):length(mcmc_res$sampling.phase_res$mcmc_sim_part_res$seed1$cpdags)])
   cpdags2 <- unique(mcmc_res$sampling.phase_res$mcmc_sim_part_res$seed2$cpdags[(burn_in/thin+1):length(mcmc_res$sampling.phase_res$mcmc_sim_part_res$seed2$cpdags)])
-
+  
   cpdag_weights1 <- custom.strength(cpdags1, nodes = bnlearn::nodes(cpdags1[[1]]), weights = NULL)
   cpdag_weights2 <- custom.strength(cpdags2, nodes = bnlearn::nodes(cpdags2[[1]]), weights = NULL)
   cpdag_weights1 <- cpdag_weights1[cpdag_weights1$direction>=0.5,]
   cpdag_weights2 <- cpdag_weights2[cpdag_weights2$direction>=0.5,]
-
+  
   cpdag_weights1$edge <- paste(cpdag_weights1$from, cpdag_weights1$to, sep="_")
   cpdag_weights2$edge <- paste(cpdag_weights2$from, cpdag_weights2$to, sep="_")
   cpdag_weights <- merge(cpdag_weights1, cpdag_weights2, by = "edge")
@@ -32,16 +37,16 @@ trace_plots <- function(mcmc_res, burn_in, thin, figures_dir, gene_annot, PK, OM
     strength_quant <- quantile(x = cpdag_weights$strength, probs = edge_freq_thres)
     cpdag_weights <- cpdag_weights[cpdag_weights$strength >= strength_quant,]
   }
-
+  
   total <- merge(cpdag_weights1, cpdag_weights2, by = c("from","to"))
-
+  
   svg(paste(figures_dir,"beta_values.svg",sep="/"))
   plot(df1$beta ~ df1$k, type = "l", col= "darkblue",
        main = "Beta values of adaptive MCMC",
        xlab = "iteration",
        ylab = "beta")
   dev.off()
-
+  
   svg(paste(figures_dir,"post_prob_edges.svg",sep="/"))
   plot(total$strength.x ~ total$strength.y,
        main = "Consistency of edges posterior probabilities",
@@ -49,26 +54,29 @@ trace_plots <- function(mcmc_res, burn_in, thin, figures_dir, gene_annot, PK, OM
        ylab = "MCMC run 1")
   abline(0,1, col="orange")
   dev.off()
-
+  
   svg(paste(figures_dir,"convergence_RMS.svg",sep="/"))
   plot(rms_strength, main="Convergence RMS strength (C.RMS.str)", pch = 18, col="gray30")
   abline(h=strength_threshold, col="#E69F00", lwd = 1.5)
   text(label = paste("3rd quartile of C.RMS.str = ", round(strength_threshold,3),sep=""), x = 100, y = strength_threshold+0.015, col="#E69F00")
   dev.off()
-
+  
+  PK <- PK[PK$src_entrez %in% unlist(lapply(OMICS_mod_res$omics,colnames)),]
+  PK <- PK[PK$dest_entrez %in% unlist(lapply(OMICS_mod_res$omics,colnames)),]
+  
   if(gene_ID=="entrezID")
   {
     edge_list <- matrix(data = c(cpdag_weights$from.x,
-                                        cpdag_weights$to.x,
-                                        cpdag_weights$strength,
-                                        rep(NA,length(cpdag_weights$strength)),
-                                        rep(NA,length(cpdag_weights$strength))),
-                               nrow = length(cpdag_weights$strength),
-                               dimnames = list(c(), c("from", "to", "weight", "edge_type", "edge")))
+                                 cpdag_weights$to.x,
+                                 cpdag_weights$strength,
+                                 rep(NA,length(cpdag_weights$strength)),
+                                 rep(NA,length(cpdag_weights$strength))),
+                        nrow = length(cpdag_weights$strength),
+                        dimnames = list(c(), c("from", "to", "weight", "edge_type", "edge")))
     # needs to be sorted because of colors in the final figure
     node_list <- unique(c(edge_list[,"from"], edge_list[,"to"]))
     edge_list[,"edge"] <- paste(edge_list[,"from"], edge_list[,"to"], sep="_")
-    return_list <- edge_types(PK = PK, gene_annot = gene_annot, edge_list = edge_list, node_list = node_list, OMICS_module_res = OMICS_module_res)
+    return_list <- edge_types(mcmc_res = mcmc_res, PK = PK, gene_annot = gene_annot, edge_list = edge_list, node_list = node_list, OMICS_mod_res = OMICS_mod_res, edge_weights = edge_weights, TFtargs = TFtargs)
   } else if (gene_ID=="gene_symbol") {
     from <- as.character(gene_annot$gene_symbol[match(cpdag_weights$from.x, gene_annot$entrezID)])
     from[is.na(from)] <- cpdag_weights$from.x[is.na(from)]
@@ -84,11 +92,11 @@ trace_plots <- function(mcmc_res, burn_in, thin, figures_dir, gene_annot, PK, OM
     # needs to be sorted because of colors in the final figure
     node_list <- unique(c(edge_list[,"from"], edge_list[,"to"]))
     edge_list[,"edge"] <- paste(edge_list[,"from"], edge_list[,"to"], sep="_")
-    return_list <- edge_types(PK = PK, gene_annot = gene_annot, edge_list = edge_list, node_list = node_list, OMICS_module_res = OMICS_module_res)
+    return_list <- edge_types(mcmc_res = mcmc_res, PK = PK, gene_annot = gene_annot, edge_list = edge_list, node_list = node_list, OMICS_mod_res = OMICS_mod_res, edge_weights = edge_weights, TFtargs = TFtargs)
   } else {
     print('gene_ID argument must be either "entrezID" or "gene_symbol"')
   } # end if else if else (gene_ID=="entrezID")
-
+  
   net_weighted <- graph_from_edgelist(return_list$edge_list[,c("from","to")])
   V(net_weighted)$color <- return_list$node_list[match(as_ids(V(net_weighted)),return_list$node_list[,"label"]),"color"]
   palette <- return_list$node_palette
@@ -99,7 +107,7 @@ trace_plots <- function(mcmc_res, burn_in, thin, figures_dir, gene_annot, PK, OM
   E(net_weighted)$weight <- return_list$edge_list[match(sub("|","_",as_ids(E(net_weighted)), fixed = TRUE),return_list$edge_list[,"edge"]),"weight"]
   
   # arrow in the network plot
-  V(net_weighted)$degree <- degree(net_weighted, mode = "in")
+  V(net_weighted)$degree <- igraph::degree(net_weighted, mode = "in")
   V(net_weighted)$degree <- normalise(V(net_weighted)$degree, to = c(3, 11))
   
   return(list(edge_list = return_list$edge_list,
@@ -127,20 +135,37 @@ normalise <- function (x, from = range(x), to = c(0, 1)) {
 #' @description
 #' `edge_types` Defines the resulting network structure and determines the color scale for each modality. This is part of trace_plots.
 #' @export
-edge_types <- function(PK, gene_annot, edge_list, node_list, OMICS_module_res)
+edge_types <- function(mcmc_res, PK, gene_annot, edge_list, node_list, OMICS_mod_res, edge_weights, TFtargs)
 {
-  omics <- OMICS_module_res$omics
-  layers_def <- OMICS_module_res$layers_def
-  omics_meth_original <- OMICS_module_res$omics_meth_original
+  omics <- OMICS_mod_res$omics
+  layers_def <- OMICS_mod_res$layers_def
+  omics_meth_original <- OMICS_mod_res$omics_meth_original
   
   if(any(regexpr("ENTREZID:",node_list)>0))
   {
     PK <- paste(PK$src_entrez, PK$dest_entrez, sep="_")
     
-    # unique edges for IntOMICS are gray ("#999999"):
-    edge_list[match(setdiff(edge_list[,"edge"],PK),edge_list[,"edge"]),"edge_type"] <- "new"
-    # edges present in both IntOMICS and PK are green ("#009E73"):
-    edge_list[match(intersect(edge_list[,"edge"],PK),edge_list[,"edge"]), "edge_type"] <- "PK"
+    if(edge_weights=="empB")
+    {
+      edge_list[,"edge_type"] <- "empirical"
+      # in columns are TFs, in rows are their targets
+      TF_pk <- as.matrix(TFtargs[intersect(edge_list[,"to"], rownames(TFtargs)),intersect(edge_list[,"from"], colnames(TFtargs))])
+      colnames(TF_pk) <- intersect(edge_list[,"from"], colnames(TFtargs))
+      
+      if(ncol(TF_pk)>=1)
+      {
+        TF_pk <- paste(colnames(TF_pk)[which(TF_pk==1, arr.ind = TRUE)[,2]],
+                       rownames(TF_pk)[which(TF_pk==1, arr.ind = TRUE)[,1]],
+                       sep="_")
+        edge_list[match(intersect(edge_list[,"edge"],TF_pk), edge_list[,"edge"]),"edge_type"] <- "TF"
+      } # end if(ncol(TF_pk)>=1)
+      
+      edge_list[match(intersect(edge_list[,"edge"],PK),edge_list[,"edge"]), "edge_type"] <- "PK"
+      edge_list[,"weight"] <- round(as.numeric(vapply(seq_along(edge_list[,2]),1,FUN=function(row) mcmc_res$B_prior_mat_weighted[edge_list[row,"from"],edge_list[row,"to"]])),2)
+    } else {
+      edge_list[match(setdiff(edge_list[,"edge"],PK),edge_list[,"edge"]),"edge_type"] <- "new"
+      edge_list[match(intersect(edge_list[,"edge"],PK),edge_list[,"edge"]), "edge_type"] <- "PK"
+    } # end if else (edge_weights=="empB")
     
     # GE node colors
     ge_cols <- brewer.pal(9, "Blues")
@@ -156,8 +181,8 @@ edge_types <- function(PK, gene_annot, edge_list, node_list, OMICS_module_res)
     borders_ge_b2 <- as.numeric(sub("(","",borders_ge_b2, fixed = TRUE))
     borders_ge_b <- c(borders_ge_b1,borders_ge_b2)
     
-    borders_ge_t1 <- as.numeric(sub("]","",unlist(lapply(strsplit(levels(cut(omics[[layers_def$omics[1]]][omics[[layers_def$omics[1]]]<=0], seq(from=min(omics[[layers_def$omics[1]]]), to=0, length.out=5), include.lowest = T)),","),FUN=function(l) l[2]))))
-    borders_ge_t2 <- as.numeric(sub("]","",unlist(lapply(strsplit(levels(cut(omics[[layers_def$omics[1]]][omics[[layers_def$omics[1]]]>0], seq(from=0, to=max(omics[[layers_def$omics[1]]]), length.out=6), include.lowest = T)),","),FUN=function(l) l[2]))))
+    borders_ge_t1 <- as.numeric(sub("]","",unlist(lapply(strsplit(levels(cut(omics[[layers_def$omics[1]]][omics[[layers_def$omics[1]]]<=median(omics[[layers_def$omics[1]]])], seq(from=min(omics[[layers_def$omics[1]]]), to=median(omics[[layers_def$omics[1]]]), length.out=5), include.lowest = T)),","),FUN=function(l) l[2]))))
+    borders_ge_t2 <- as.numeric(sub("]","",unlist(lapply(strsplit(levels(cut(omics[[layers_def$omics[1]]][omics[[layers_def$omics[1]]]>median(omics[[layers_def$omics[1]]])], seq(from=median(omics[[layers_def$omics[1]]]), to=max(omics[[layers_def$omics[1]]]), length.out=6), include.lowest = T)),","),FUN=function(l) l[2]))))
     borders_ge_t <- c(borders_ge_t1,borders_ge_t2)
     borders <- sort(unique(c(borders_ge_b,borders_ge_t)))
     expr_group <- cut(colMeans(omics_ge_gs), breaks = borders, include.lowest = T, labels = FALSE)
@@ -203,6 +228,7 @@ edge_types <- function(PK, gene_annot, edge_list, node_list, OMICS_module_res)
       meth_cols <- brewer.pal(9, "YlOrRd")
       meth_common <- intersect(node_list[,"label"],colnames(omics_meth_original))
       omics_meth_gs <- as.matrix(omics_meth_original[,meth_common])
+      colnames(omics_meth_gs) <- meth_common
       
       borders_meth_b1 <- unlist(lapply(strsplit(levels(cut(omics_meth_original[omics_meth_original<=0.5], seq(from=min(omics_meth_original, na.rm = TRUE), to=0.5, length.out=5), include.lowest = T)),","),FUN=function(l) l[1]))
       borders_meth_b1[1] <- sub("[","(",borders_meth_b1[1], fixed = TRUE)
@@ -221,11 +247,12 @@ edge_types <- function(PK, gene_annot, edge_list, node_list, OMICS_module_res)
       names(meth_group) <- colnames(omics_meth_gs)
       
       node_list[!is.na(match(node_list[,"label"],colnames(omics_meth_original))),"color"] <- as.numeric(meth_group[match(node_list[,"label"][!is.na(match(node_list[,"label"],colnames(omics_meth_original)))],names(meth_group))])
-
+      
       ge_cols <- c(ge_cols, meth_cols)
     } # end if(any(mapply(omics,FUN=function(list) any(regexpr("entrezid:",colnames(list), ignore.case = TRUE)<0))))
     
   } else {
+    
     PK_src_dest <- as.character(gene_annot$gene_symbol[match(PK$src_entrez,gene_annot$entrezID)])
     PK_src_dest[regexpr("entrezid",PK_src_dest)>0] <- tolower(as.character(gene_annot$gene_symbol[match(toupper(PK_src_dest[regexpr("entrezid",PK_src_dest)>0]),gene_annot$entrezID)]))
     PK_src_dest[is.na(PK_src_dest)] <- PK$src_entrez[is.na(PK_src_dest)]
@@ -233,11 +260,33 @@ edge_types <- function(PK, gene_annot, edge_list, node_list, OMICS_module_res)
     PK <- paste(PK_src_dest,
                 as.character(gene_annot$gene_symbol[match(PK$dest_entrez,gene_annot$entrezID)]), sep="_")
     
-    # unique edges for IntOMICS are gray ("#999999"):
-    edge_list[match(setdiff(edge_list[,"edge"],PK),edge_list[,"edge"]),"edge_type"] <- "new"
-    # edges present in both IntOMICS and PK are green ("#009E73"):
-    edge_list[match(intersect(edge_list[,"edge"],PK),edge_list[,"edge"]), "edge_type"] <- "PK"
-
+    if(edge_weights=="empB")
+    {
+      edge_list[,"edge_type"] <- "empirical"
+      # in columns are TFs, in rows are their targets
+      targs_eid <- gene_annot$entrezID[match(edge_list[,"to"], gene_annot$gene_symbol)]
+      TFs_eid <- gene_annot$entrezID[match(edge_list[,"from"], gene_annot$gene_symbol, nomatch = 0)]
+      TF_pk <- as.matrix(TFtargs[intersect(targs_eid, rownames(TFtargs)),intersect(TFs_eid, colnames(TFtargs))])
+      colnames(TF_pk) <- intersect(TFs_eid, colnames(TFtargs))
+      
+      if(ncol(TF_pk)>=1)
+      {
+        TF_pk <- paste(gene_annot$gene_symbol[match(colnames(TF_pk)[which(TF_pk==1, arr.ind = TRUE)[,2]], gene_annot$entrezID)],
+                       gene_annot$gene_symbol[match(rownames(TF_pk)[which(TF_pk==1, arr.ind = TRUE)[,1]], gene_annot$entrezID)],
+                       sep="_")
+        edge_list[match(intersect(edge_list[,"edge"],TF_pk), edge_list[,"edge"]),"edge_type"] <- "TF"
+      } # end if(ncol(TF_pk)>=1)
+      
+      edge_list[match(intersect(edge_list[,"edge"],PK),edge_list[,"edge"]), "edge_type"] <- "PK"
+      rownames(mcmc_res$B_prior_mat_weighted)[!is.na(match(rownames(mcmc_res$B_prior_mat_weighted), gene_annot$entrezID))] <- gene_annot$gene_symbol[match(rownames(mcmc_res$B_prior_mat_weighted), gene_annot$entrezID, nomatch = 0)]
+      rownames(mcmc_res$B_prior_mat_weighted)[!is.na(match(toupper(rownames(mcmc_res$B_prior_mat_weighted)), gene_annot$entrezID))] <- tolower(gene_annot$gene_symbol[match(toupper(rownames(mcmc_res$B_prior_mat_weighted)), gene_annot$entrezID, nomatch = 0)])
+      colnames(mcmc_res$B_prior_mat_weighted) <- rownames(mcmc_res$B_prior_mat_weighted)
+      edge_list[,"weight"] <- round(as.numeric(vapply(seq_along(edge_list[,2]),1,FUN=function(row) mcmc_res$B_prior_mat_weighted[edge_list[row,"from"],edge_list[row,"to"]])),2)
+    } else {
+      edge_list[match(setdiff(edge_list[,"edge"],PK),edge_list[,"edge"]),"edge_type"] <- "new"
+      edge_list[match(intersect(edge_list[,"edge"],PK),edge_list[,"edge"]), "edge_type"] <- "PK"
+    } # end if else (edge_weights=="empB")
+    
     # GE node colors
     ge_cols <- brewer.pal(9, "Blues")
     ge_common <- intersect(gene_annot$entrezID[match(unique(node_list),gene_annot$gene_symbol)],colnames(omics[[layers_def$omics[1]]]))
@@ -289,6 +338,7 @@ edge_types <- function(PK, gene_annot, edge_list, node_list, OMICS_module_res)
       
       cnv_group <- cut(colMeans(omics_cnv_gs, na.rm = TRUE), breaks = borders_cnv, include.lowest = T, labels = FALSE) + length(ge_cols)
       names(cnv_group) <- colnames(omics_cnv_gs)
+      
       node_list[node_list[,"label"]==tolower(node_list[,"label"]),"color"][gene_annot$entrezID[match(toupper(node_list[node_list[,"label"]==tolower(node_list[,"label"]),"label"]),gene_annot$gene_symbol)] %in% toupper(colnames(omics[[names(which(mapply(FUN=function(mod) any(regexpr("entrezid:",colnames(mod))>0), omics)==TRUE))]]))] <- as.numeric(cnv_group[match(node_list[node_list[,"label"]==tolower(node_list[,"label"]),"label"][gene_annot$entrezID[match(toupper(node_list[node_list[,"label"]==tolower(node_list[,"label"]),"label"]),gene_annot$gene_symbol)] %in% toupper(colnames(omics[[names(which(mapply(FUN=function(mod) any(regexpr("entrezid:",colnames(mod))>0), omics)==TRUE))]]))], names(cnv_group))])
       
       ge_cols <- c(ge_cols, cnv_cols)
@@ -299,7 +349,8 @@ edge_types <- function(PK, gene_annot, edge_list, node_list, OMICS_module_res)
       # METH node colors
       meth_cols <- brewer.pal(9, "YlOrRd")
       meth_common <- intersect(node_list[,"label"],colnames(omics_meth_original))
-      omics_meth_gs <- omics_meth_original[,meth_common]
+      omics_meth_gs <- as.matrix(omics_meth_original[,meth_common])
+      colnames(omics_meth_gs) <- meth_common
       
       borders_meth_b1 <- unlist(lapply(strsplit(levels(cut(omics_meth_original[omics_meth_original<=0.5], seq(from=min(omics_meth_original, na.rm = TRUE), to=0.5, length.out=5), include.lowest = T)),","),FUN=function(l) l[1]))
       borders_meth_b1[1] <- sub("[","(",borders_meth_b1[1], fixed = TRUE)
@@ -348,4 +399,29 @@ legend_custom <- function(net)
     text(x = unique(c(head(seq(yb,yt,(yt-yb)/9),-1), tail(seq(yb,yt,(yt-yb)/9),-1))),y = 1.72,labels = round(net$borders_METH,2))
     text(x = 0.94,y = 1.65,labels = "METH")
   } # end if(!is.null(net$borders_METH))
+}
+
+#' Heatmap of empB - B
+#' @description
+#' `empB_heatmap` plot a heatmap with empB - B values (depicts the difference between prior knowledge and the empirical knowledge)
+#' @export
+empB_heatmap <- function(mcmc_res, OMICS_mod_res, gene_annot, TFtargs)
+{
+  mat <- mcmc_res$B_prior_mat_weighted - OMICS_mod_res$B_prior_mat
+  mat <- mat[regexpr("ENTREZID:",rownames(mat))>0,regexpr("ENTREZID:",rownames(mat))>0]
+  mat[which(OMICS_mod_res$B_prior_mat[regexpr("ENTREZID:",rownames(OMICS_mod_res$B_prior_mat))>0,regexpr("ENTREZID:",rownames(OMICS_mod_res$B_prior_mat))>0]==1)] <- NA
+  TFtargs <- as.matrix(TFtargs[intersect(rownames(TFtargs),colnames(mat)),intersect(colnames(TFtargs),rownames(mat))])
+  colnames(TFtargs) <- intersect(colnames(TFtargs),rownames(mat))
+  if(ncol(TFtargs)>0)
+  {
+    inds <- which(TFtargs==1, arr.ind = TRUE)
+    for(i in c(1:nrow(inds)))
+    {
+      mat[colnames(TFtargs)[inds[i,2]],rownames(TFtargs)[inds[i,1]]] <- NA
+    } # end for
+  } # end if 
+  rownames(mat) <- gene_annot$gene_symbol[match(rownames(mat), gene_annot$entrezID)]
+  colnames(mat) <- rownames(mat)
+  diag(mat) <- NA
+  heatmap.2(mat, col=bluered, na.color="gray", Rowv = NA, Colv = NA, trace = 'none', scale = 'none', main = "empB - B", dendrogram = "none")
 }

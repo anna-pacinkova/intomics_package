@@ -1,6 +1,6 @@
 #' Wnt signalling pathway:
 #'
-#' A dataset containing the direct interactions between 25 genes of interest.
+#' A dataset containing known direct interactions between 7 genes.
 #'
 #' @format A data frame with 6 rows and 3 variables:
 #' \describe{
@@ -11,11 +11,22 @@
 #' @source \url{https://www.kegg.jp/entry/map04310}
 "PK"
 
+#' transcription factors and their known targets:
+#'
+#' A dataset containing the direct interactions between TFs and their targets.
+#'
+#' @format A matrix with 22452 rows and 181 variables:
+#' \describe{
+#'   columns refer to TFs and rows to their targets
+#' }
+#' @source \url{https://maayanlab.cloud/Harmonizome/dataset/ENCODE+Transcription+Factor+Targets}
+"TFtarg_mat"
+
 #' Gene ID conversion table:
 #'
 #' A data.frame containing the entrez ID and corresponding gene symbol.
 #'
-#' @format A data frame with 7 rows and 2 variables:
+#' @format A data frame with 8 rows and 2 variables:
 #' \describe{
 #'   \item{entrezID}{Entrez ID}
 #'   \item{gene_symbol}{gene symbol}
@@ -27,7 +38,7 @@
 #'
 #' A named list containing the associated methylation probes of given gene.
 #'
-#' @format A named list with 7 components - each component corresponds to one gene:
+#' @format A named list with 5 components - each component corresponds to one gene:
 #' \describe{
 #' each component of the list is a character vector with probe names associated with given gene
 #' }
@@ -69,4 +80,4 @@
 #'   \item{beta_tuning}{result from the automatically tuned MCMC algorithm}
 #' }
 #' @source \url{}
-"BN_module_res"
+"BN_mod_res"

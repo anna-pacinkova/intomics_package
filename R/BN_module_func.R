@@ -2,22 +2,23 @@
 #' @description
 #' `BN_module` Performs automatically tuned MCMC sampling from posterior distribution together with conventional MCMC sampling using empirical biological prior matrix to sample network structures from posterior distribution.
 #' @export
-BN_module <- function(burn_in, thin, seed1, seed2, OMICS_module_res, minseglen, len = 5, prob_mbr = 0.07)
+BN_module <- function(burn_in, thin, seed1, seed2, OMICS_mod_res, minseglen, len = 5, prob_mbr = 0.07)
 {
-  energy_all_configs_node <- OMICS_module_res$pf_UB_BGe_pre$energy_all_configs_node
-  BGe_score_all_configs_node <- OMICS_module_res$pf_UB_BGe_pre$BGe_score_all_configs_node
-  parent_set_combinations <- OMICS_module_res$pf_UB_BGe_pre$parents_set_combinations
+  energy_all_configs_node <- OMICS_mod_res$pf_UB_BGe_pre$energy_all_configs_node
+  BGe_score_all_configs_node <- OMICS_mod_res$pf_UB_BGe_pre$BGe_score_all_configs_node
+  parent_set_combinations <- OMICS_mod_res$pf_UB_BGe_pre$parents_set_combinations
+  annot <- OMICS_mod_res$annot
   
   ##########################
   ### 1st adaption phase ###
   ### we change the variance of the proposal distribution to achieve the MC acceptance rate of 0.44 
   first.adapt.phase_net <- first_adapt_phase(seed1 = seed1, 
-                                             omics = OMICS_module_res$omics,
-                                             B_prior_mat = OMICS_module_res$B_prior_mat,
+                                             omics = OMICS_mod_res$omics,
+                                             B_prior_mat = OMICS_mod_res$B_prior_mat,
                                              energy_all_configs_node = energy_all_configs_node,
                                              len = len,
-                                             layers_def = OMICS_module_res$layers_def,
-                                             annot = OMICS_module_res$annot,
+                                             layers_def = OMICS_mod_res$layers_def,
+                                             annot = annot,
                                              prob_mbr = prob_mbr, 
                                              BGe_score_all_configs_node = BGe_score_all_configs_node,
                                              parent_set_combinations = parent_set_combinations)
@@ -26,10 +27,10 @@ BN_module <- function(burn_in, thin, seed1, seed2, OMICS_module_res, minseglen, 
   ### transient phase ###
   ### to check if the chain is moving towards the mode of target distribution 
   transient.phase_net <- transient_phase(first.adapt.phase_net = first.adapt.phase_net, 
-                  omics = OMICS_module_res$omics,
-                  B_prior_mat = OMICS_module_res$B_prior_mat, 
-                  layers_def = OMICS_module_res$layers_def,
-                  annot = OMICS_module_res$annot,
+                  omics = OMICS_mod_res$omics,
+                  B_prior_mat = OMICS_mod_res$B_prior_mat, 
+                  layers_def = OMICS_mod_res$layers_def,
+                  annot = annot,
                   energy_all_configs_node = energy_all_configs_node, 
                   prob_mbr = prob_mbr, 
                   BGe_score_all_configs_node = BGe_score_all_configs_node,
@@ -39,21 +40,29 @@ BN_module <- function(burn_in, thin, seed1, seed2, OMICS_module_res, minseglen, 
   ### 2nd adaption phase ###
   ### modified Adaptive Metropolis algorithm to find the proposal distribution that has a similar covariance structure with the target distribution
   second.adapt.phase_net <- second_adapt_phase(transient.phase_net = transient.phase_net, 
-                                         omics = OMICS_module_res$omics,
-                                         B_prior_mat = OMICS_module_res$B_prior_mat, 
+                                         omics = OMICS_mod_res$omics,
+                                         B_prior_mat = OMICS_mod_res$B_prior_mat, 
                                          energy_all_configs_node = energy_all_configs_node, 
-                                         layers_def = OMICS_module_res$layers_def,
+                                         layers_def = OMICS_mod_res$layers_def,
                                          prob_mbr = prob_mbr, 
                                          BGe_score_all_configs_node = BGe_score_all_configs_node,
                                          parent_set_combinations = parent_set_combinations,
-                                         annot = OMICS_module_res$annot)
-
+                                         annot = annot)
+                                         
   ######################
   ### sampling phase ###
   ### Now we apply 2 MCMC simulations and check the RMS value (https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-015-0734-6) to stop the simulation
   ### After the burn-in period, we discard the values from the first half of this phase
-  sampling.phase_net <- sampling_phase(second.adapt.phase_net = second.adapt.phase_net, seed1 = seed1, seed2 = seed2, thin = thin,
-                                       omics = OMICS_module_res$omics, layers_def = OMICS_module_res$layers_def, prob_mbr = prob_mbr, minseglen = minseglen, burn_in = burn_in)
+  sampling.phase_net <- sampling_phase(second.adapt.phase_net = second.adapt.phase_net, 
+  					seed1 = seed1, 
+  					seed2 = seed2, 
+  					thin = thin,
+  					omics = OMICS_mod_res$omics,
+  					layers_def = OMICS_mod_res$layers_def,
+  					prob_mbr = prob_mbr,
+  					minseglen = minseglen,
+  					burn_in = burn_in,
+  					annot = annot)
 
   # save only beta values and resulting cpdags
   sampling.phase_net$mcmc_sim_part_res$seed1 <- sampling.phase_net$mcmc_sim_part_res$seed1[c("betas","cpdags")]
@@ -71,7 +80,7 @@ BN_module <- function(burn_in, thin, seed1, seed2, OMICS_module_res, minseglen, 
 #' @export
 first_adapt_phase <- function(seed1, omics, B_prior_mat, energy_all_configs_node, len, layers_def, prob_mbr, BGe_score_all_configs_node, parent_set_combinations, annot) 
 {
-  init.net1 <- init.net.mcmc(omics = omics, seed = seed1, layers_def = layers_def)
+  init.net1 <- init.net.mcmc(omics = omics, seed = seed1, layers_def = layers_def, B_prior_mat = B_prior_mat)
   first.adapt.phase_net <- source_net_def(init.net.mcmc.output = init.net1, 
                                 omics = omics, 
                                 parent_set_combinations = parent_set_combinations,
@@ -92,7 +101,7 @@ first_adapt_phase <- function(seed1, omics, B_prior_mat, energy_all_configs_node
   # and monitor the acceptance rate for the past 200 iterations.
   # If the beta acceptance rate falls outside of 0.28 and 0.60, then we adjust log(len) for every 100 iterations and monitor the acceptance rate for the past 200 iterations until the acceptance rate comes between 0.28 and 0.60.
   first.adapt.phase_net <- acceptance_check(first.adapt.phase_net = first.adapt.phase_net, round_check = 100, last_iter_check = 200, prob_mbr = prob_mbr, layers_def = layers_def, parent_set_combinations = parent_set_combinations, BGe_score_all_configs_node = BGe_score_all_configs_node, omics = omics, annot = annot)
-
+  
   # We run 200 more iterations with same len, which have made the acceptance rate to fall between 0.28 and 0.60, 
   # and monitor the acceptance rate for the past 400 iterations. 
   # If the beta acceptance rate falls outside of 0.28 and 0.60, then we adjust log(len) for every 200 iterations and monitor the acceptance rate for the past 400 iterations until the acceptance rate comes between 0.28 and 0.60.
@@ -107,7 +116,7 @@ first_adapt_phase <- function(seed1, omics, B_prior_mat, energy_all_configs_node
 #' @export
 transient_phase <- function(first.adapt.phase_net, omics, B_prior_mat, layers_def, energy_all_configs_node, prob_mbr, BGe_score_all_configs_node, parent_set_combinations, annot) 
 {
-  beta_1st_adapt <- first.adapt.phase_net$betas[[length(first.adapt.phase_net$betas)]]$len
+beta_1st_adapt <- first.adapt.phase_net$betas[[length(first.adapt.phase_net$betas)]]$len
   source.net <- first.adapt.phase_net$nets[[length(first.adapt.phase_net$nets)]]
   beta.source <- first.adapt.phase_net$betas[[length(first.adapt.phase_net$betas)]]
   start <- length(first.adapt.phase_net$nets)
@@ -122,7 +131,7 @@ transient_phase <- function(first.adapt.phase_net, omics, B_prior_mat, layers_de
     if(first.adapt.phase_net$method_choice_saved[i]=="MC3")
     {
       ### candidate.net definition: 
-      candidate.net <- MC3(source_net_adjacency = source.net$adjacency,
+      candidate.net <- MC3(source_net = source.net,
                            layers_def =  layers_def, 
                            B_prior_mat = B_prior_mat, 
                            beta.source = beta.source, 
@@ -140,7 +149,7 @@ transient_phase <- function(first.adapt.phase_net, omics, B_prior_mat, layers_de
       source.net$likelihood <- source.net$likelihood_part + candidate.net$proposal.distr
       first.adapt.phase_net$acceptance_saved[i] <- candidate.net$likelihood - source.net$likelihood
       
-      candidate_edge <- which(candidate.net$adjacency!=source.net$adjacency, arr.ind = TRUE)
+      # ?? candidate_edge <- which(candidate.net$adjacency!=source.net$adjacency, arr.ind = TRUE)
 
       u <- log(runif(1))
       if (u < first.adapt.phase_net$acceptance_saved[i])
@@ -220,7 +229,7 @@ transient_phase <- function(first.adapt.phase_net, omics, B_prior_mat, layers_de
       if(first.adapt.phase_net$method_choice_saved[i]=="MC3")
       {
         ### candidate.net definition: 
-        candidate.net <- MC3(source_net_adjacency = source.net$adjacency,
+        candidate.net <- MC3(source_net = source.net,
                              layers_def =  layers_def, 
                              B_prior_mat = B_prior_mat, 
                              beta.source = beta.source, 
@@ -238,7 +247,7 @@ transient_phase <- function(first.adapt.phase_net, omics, B_prior_mat, layers_de
         source.net$likelihood <- source.net$likelihood_part + candidate.net$proposal.distr
         first.adapt.phase_net$acceptance_saved[i] <- candidate.net$likelihood - source.net$likelihood
         
-        candidate_edge <- which(candidate.net$adjacency!=source.net$adjacency, arr.ind = TRUE)
+        # ?? candidate_edge <- which(candidate.net$adjacency!=source.net$adjacency, arr.ind = TRUE)
 
         u <- log(runif(1))
         if (u < first.adapt.phase_net$acceptance_saved[i])
@@ -313,7 +322,7 @@ transient_phase <- function(first.adapt.phase_net, omics, B_prior_mat, layers_de
 #' @description
 #' `second_adapt_phase` This phase identifies the proposal distribution that has a similar covariance structure with the target distribution.
 #' @export
-second_adapt_phase <- function(transient.phase_net, omics, layers_def, B_prior_mat, energy_all_configs_node, prob_mbr, BGe_score_all_configs_node, parent_set_combinations, annot) 
+second_adapt_phase <- function(transient.phase_net, omics, layers_def, B_prior_mat, energy_all_configs_node, prob_mbr, BGe_score_all_configs_node, parent_set_combinations, annot, woPKGE_belief = 0.5) 
 {
   # constant <- 2.38/1.5
   # for details see the original paper
@@ -362,36 +371,44 @@ second_adapt_phase <- function(transient.phase_net, omics, layers_def, B_prior_m
                                                          annot = annot)
 
   betas_check <- mapply(tail(squared.jump_second.adapt.phase_net$betas,1001), FUN=function(list) list$value)
-  betas_check <- colMeans(matrix((betas_check[-1] - betas_check[-1001])^2,nrow=200))
-  reg_dat <- data.frame(beta_means = betas_check, iter = 1:5)
-  model <- lm(beta_means ~ iter, data = reg_dat)
-  squared.jump_second.adapt.phase_net$p.val <- summary(model)$coefficients[2,4]
- 
-  while(squared.jump_second.adapt.phase_net$p.val < 0.1)
+  if(length(unique(betas_check))>1)
   {
-    squared.jump_second.adapt.phase_net <- squared_jumping(second.adapt.phase_net = squared.jump_second.adapt.phase_net, 
-                                                           constant = constant,
-                                                           beta_sd = second.adapt.phase_net$beta_sd,
-                                                           fin = 200, 
-                                                           B_prior_mat = B_prior_mat, 
-                                                           omics = omics, 
-                                                           parent_set_combinations = parent_set_combinations, 
-                                                           BGe_score_all_configs_node = BGe_score_all_configs_node, 
-                                                           layers_def = layers_def,
-                                                           prob_mbr = prob_mbr,
-                                                           annot = annot)
-    
-    betas_check <- mapply(tail(squared.jump_second.adapt.phase_net$betas,1001), FUN=function(list) list$value)
     betas_check <- colMeans(matrix((betas_check[-1] - betas_check[-1001])^2,nrow=200))
     reg_dat <- data.frame(beta_means = betas_check, iter = 1:5)
     model <- lm(beta_means ~ iter, data = reg_dat)
     squared.jump_second.adapt.phase_net$p.val <- summary(model)$coefficients[2,4]
-  } # end while(squared.jump_second.adapt.phase_net$p.val < 0.1)
-
+    
+    while(squared.jump_second.adapt.phase_net$p.val < 0.1)
+    {
+      squared.jump_second.adapt.phase_net <- squared_jumping(second.adapt.phase_net = squared.jump_second.adapt.phase_net, 
+                                                             constant = constant,
+                                                             beta_sd = second.adapt.phase_net$beta_sd,
+                                                             fin = 200, 
+                                                             B_prior_mat = B_prior_mat, 
+                                                             omics = omics, 
+                                                             parent_set_combinations = parent_set_combinations, 
+                                                             BGe_score_all_configs_node = BGe_score_all_configs_node, 
+                                                             layers_def = layers_def,
+                                                             prob_mbr = prob_mbr,
+                                                             annot = annot)
+      
+      betas_check <- mapply(tail(squared.jump_second.adapt.phase_net$betas,1001), FUN=function(list) list$value)
+      if(length(unique(betas_check))>1)
+      {
+        betas_check <- colMeans(matrix((betas_check[-1] - betas_check[-1001])^2,nrow=200))
+        reg_dat <- data.frame(beta_means = betas_check, iter = 1:5)
+        model <- lm(beta_means ~ iter, data = reg_dat)
+        squared.jump_second.adapt.phase_net$p.val <- summary(model)$coefficients[2,4]
+      } else {
+        squared.jump_second.adapt.phase_net$p.val <- 1
+      }# end if else (length(unique(betas_check))>1)
+    } # end while(squared.jump_second.adapt.phase_net$p.val < 0.1)
+  } # end if(length(unique(betas_check))>1)
+  
   squared.jump_second.adapt.phase_net$constant <- constant
   squared.jump_second.adapt.phase_net$beta_sd <- second.adapt.phase_net$beta_sd
   B_prior_mat_weighted <- c(B_prior_mat)
-  conditions <- c(B_prior_mat)==0.5 & c(squared.jump_second.adapt.phase_net$iter_edges[,,1])>0
+  conditions <- c(B_prior_mat)==woPKGE_belief & c(squared.jump_second.adapt.phase_net$iter_edges[,,1])>0
   B_prior_mat_weighted[conditions] <- c(squared.jump_second.adapt.phase_net$iter_edges[,,2])[conditions] / c(squared.jump_second.adapt.phase_net$iter_edges[,,1])[conditions]
   squared.jump_second.adapt.phase_net$B_prior_mat_weighted <- matrix(B_prior_mat_weighted, nrow=nrow(B_prior_mat), dimnames = list(rownames(B_prior_mat), colnames(B_prior_mat)))
   squared.jump_second.adapt.phase_net$partition_func_UB <- pf_UB_est(omics = omics, layers_def = layers_def, B_prior_mat = squared.jump_second.adapt.phase_net$B_prior_mat_weighted, annot = annot)
@@ -414,10 +431,11 @@ acceptance_check <- function(first.adapt.phase_net, round_check, last_iter_check
     i <- i+1
     ## method choice:
     first.adapt.phase_net$method_choice_saved[i] <- sample(x = c("MC3", "MBR"), size = 1, prob = c(1-prob_mbr, prob_mbr))
+    
     if(first.adapt.phase_net$method_choice_saved[i]=="MC3")
     {
       ### candidate.net definition: 
-      candidate.net <- MC3(source_net_adjacency = source.net$adjacency,
+      candidate.net <- MC3(source_net = source.net,
                            layers_def = layers_def, 
                            B_prior_mat = first.adapt.phase_net$B_prior_mat, 
                            beta.source = beta.source, 
@@ -515,31 +533,26 @@ acceptance_check <- function(first.adapt.phase_net, round_check, last_iter_check
 #' @export
 BGe_score <- function(adjacency_matrix, omics, layers_def, parent_set_combinations, BGe_score_all_configs_node)
 {
-  score_nodes <- 0
-  ## GE
-  nodes_cand <- rownames(adjacency_matrix)[which(regexpr("ENTREZ",rownames(adjacency_matrix))>0)]
-  for(node in nodes_cand)
+    nodes_cand <- rownames(adjacency_matrix)[which(regexpr("ENTREZ",rownames(adjacency_matrix))>0)]
+  score_nodes <- sum(sapply(nodes_cand, FUN=function(node) BGe_node(node = node, adjacency_matrix = adjacency_matrix, parent_set_combinations = parent_set_combinations, BGe_score_all_configs_node = BGe_score_all_configs_node)))
+  return(score_nodes)
+}
+
+#' BGe score for specific node 
+#' @description
+#' `BGe_node` Computes the BGe score of given node using precomputed sets of possible parents.
+#' @export
+BGe_node <- function(node, adjacency_matrix, parent_set_combinations, BGe_score_all_configs_node)
+{
+  parents <- names(which(adjacency_matrix[,node]==1))
+  if(length(parents)>0)
   {
-    parents <- names(which(adjacency_matrix[,node]==1))
-    if(length(parents)>0)
-    {
-      which(apply(parent_set_combinations[[node]][[length(parents)]],2,FUN=function(column) length(intersect(column,parents))==length(parents)))
-      parents_ind <- which(apply(parent_set_combinations[[node]][[length(parents)]],2,FUN=function(column) all(column==parents))==TRUE)
-      score_nodes <- score_nodes + BGe_score_all_configs_node[[node]][[length(parents)]][parents_ind]
-    } else {
-      score_nodes <- score_nodes + BGe_score_all_configs_node[[node]][[1]][is.na(parent_set_combinations[[node]][[1]])]
-    } # end if(length(parents)>0)
-  } # end for(node in nodes_cand)
-  ## CNV+METH
-  nodes_cand <- rownames(adjacency_matrix)[which(regexpr("ENTREZ",rownames(adjacency_matrix))<0)]
-  if(length(nodes_cand)>0)
-  {
-    for(node in nodes_cand)
-    {
-      score_nodes <- score_nodes + BGe_score_all_configs_node[[node]][,1]
-    } # end for(node in nodes_cand)
-  } # end if(length(nodes_cand)>0)
-  return(BGe_score_net = score_nodes)
+    parents_ind <- which(apply(parent_set_combinations[[node]][[length(parents)]],2,FUN=function(column) length(intersect(column,parents))==length(parents)))
+    score_node <- BGe_score_all_configs_node[[node]][[length(parents)]][parents_ind]
+  } else {
+    score_node <- BGe_score_all_configs_node[[node]][[1]][is.na(parent_set_combinations[[node]][[1]])]
+  } # end if(length(parents)>0)
+  return(score_node)
 }
 
 #' Epsilon  
@@ -565,72 +578,87 @@ epsilon <- function(net, B_prior_mat)
 #' @description
 #' `mcmc.simulation_sampling.phase` This function performs the final sampling of network structures with estimated hyperparameters. It if part of sampling_phase function.
 #' @export
-mcmc.simulation_sampling.phase <- function(first, last, sim_init, prob_mbr, B_prior_mat, omics, parent_set_combinations, BGe_score_all_configs_node, layers_def, len, thin, counting, energy_all_configs_node)
+mcmc.simulation_sampling.phase <- function(first, last, sim_init, prob_mbr, B_prior_mat, omics, parent_set_combinations, BGe_score_all_configs_node, layers_def, len, thin, counting, energy_all_configs_node, annot)
 {
   source.net <- sim_init$nets[[length(sim_init$nets)]]
   beta.source <- sim_init$betas[[length(sim_init$betas)]]
   set.seed(sim_init$seed+counting)
-  for (i in first:last)
-  {
-    ## method choice:
-    sim_init$method_choice_saved[i] <- sample(x = c("MC3", "MBR"), size = 1, prob = c(1-prob_mbr, prob_mbr))
-    if(sim_init$method_choice_saved[i]=="MC3")
-    {
-      ### candidate.net definition: 
-      candidate.net <- MC3(source_net_adjacency = source.net$adjacency,
-                           layers_def =  layers_def, 
-                           B_prior_mat = B_prior_mat, 
-                           beta.source = beta.source, 
-                           partition_func_UB_beta_source = sim_init$partition_func_UB_beta_source, 
-                           omics = omics, 
-                           parent_set_combinations = parent_set_combinations, 
-                           BGe_score_all_configs_node = BGe_score_all_configs_node, 
-                           annot = annot)
-      ## Proposal distribution Q(..|..)
-      # Q(source.net|candidate.net)
-      # Q(candidate.net|source.net)
-      candidate.net$proposal.distr <- log(1/source.net$nbhd.size)
-      source.net$proposal.distr <- log(1/candidate.net$nbhd.size)
-      candidate.net$likelihood <- candidate.net$likelihood_part + source.net$proposal.distr
-      source.net$likelihood <- source.net$likelihood_part + candidate.net$proposal.distr
-      sim_init$acceptance_saved[i] <- candidate.net$likelihood - source.net$likelihood
+  start <- length(sim_init$nets)
 
-    } else {
-      candidate.net <- MBR(source_net_adjacency = source.net$adjacency, 
-                           layers_def = layers_def, 
-                           omics = omics, 
-                           BGe_score_all_configs_node = BGe_score_all_configs_node, 
-                           parent_set_combinations = parent_set_combinations)
-      sim_init$acceptance_saved[i] <- candidate.net$acceptance
-      ### source.net parameters necessary for MC3 method: 
-      ## Marginal likelihood P(D|G) using ln(BGe score):
-      candidate.net$BGe <-BGe_score(adjacency_matrix = candidate.net$adjacency, omics = omics, layers_def = layers_def, parent_set_combinations = parent_set_combinations, BGe_score_all_configs_node = BGe_score_all_configs_node)
-      candidate.net$nbhd.size <- neighborhood_size(net = candidate.net$adjacency, layers_def = layers_def, B_prior_mat = B_prior_mat, omics = omics)
-      ## Prior probability
-      candidate.net$energy <- sum(epsilon(net = candidate.net$adjacency, B_prior_mat = B_prior_mat))
-      # partition_func_UB is already log transformed
-      # the output of this function is also log transformed (natural logarithm)!
-      candidate.net$prior <- (-beta.source$value*candidate.net$energy) - sim_init$partition_func_UB_beta_source
-      candidate.net$likelihood_part <- candidate.net$BGe + candidate.net$prior
-
-    } # end if(method.choice=="MC3")
-    
-    u <- log(runif(1))
-    
-    if (u < sim_init$acceptance_saved[i])
+  sim_init_forks <- list()
+  ### candidate.net definition: 
+  foreach(j = 1:3) %do% {
+    sim_init_fork <- sim_init
+    for (i in first:last)
     {
-      source.net <- candidate.net
-    } # end if (u < acceptance_saved[i])
-    sim_init$nets[[i]] <- source.net
-  
-    if(i==last)
-    {
-      sim_init$cpdags[[length(sim_init$cpdags)+1]] <- empty.graph(rownames(sim_init$nets[[i]]$adjacency))
-      amat(sim_init$cpdags[[length(sim_init$cpdags)]]) <- sim_init$nets[[i]]$adjacency
-      sim_init$cpdags[[length(sim_init$cpdags)]] <- cpdag(sim_init$cpdags[[length(sim_init$cpdags)]])
-    } # end if(i==last)
-  } # end for (i in first:last)
-  
+      ## method choice:
+      sim_init$method_choice_saved[i] <- sample(x = c("MC3", "MBR"), size = 1, prob = c(1-prob_mbr, prob_mbr))
+      if(sim_init$method_choice_saved[i]=="MC3")
+      {
+        candidate.net <- MC3_constantBGe(source_net = source.net,
+                                         layers_def = layers_def, 
+                                         B_prior_mat = B_prior_mat, 
+                                         beta.source = beta.source, 
+                                         partition_func_UB_beta_source =sim_init_fork$partition_func_UB_beta_source, 
+                                         omics = omics, 
+                                         parent_set_combinations = parent_set_combinations, 
+                                         BGe_score_all_configs_node = BGe_score_all_configs_node,
+                                         annot = annot)
+        ## Proposal distribution Q(..|..)
+        # Q(source.net|candidate.net)
+        # Q(candidate.net|source.net)
+        candidate.net$proposal.distr <- log(1/source.net$nbhd.size)
+        source.net$proposal.distr <- log(1/candidate.net$nbhd.size)
+        candidate.net$likelihood <- candidate.net$likelihood_part + source.net$proposal.distr
+        source.net$likelihood <- source.net$likelihood_part + candidate.net$proposal.distr
+        sim_init_fork$acceptance_saved[i] <- candidate.net$likelihood - source.net$likelihood
+        
+        u <- log(runif(1))
+        
+        if (u < sim_init_fork$acceptance_saved[i])
+        {
+          source.net <- candidate.net
+        } # end if (u < acceptance_saved[i])
+        sim_init_fork$nets[[i]] <- source.net
+      } else {
+        candidate.net <- MBR(source_net_adjacency = source.net$adjacency, 
+                             layers_def = layers_def, 
+                             omics = omics, 
+                             BGe_score_all_configs_node = BGe_score_all_configs_node, 
+                             parent_set_combinations = parent_set_combinations)
+        sim_init_fork$acceptance_saved[i] <- candidate.net$acceptance
+        ### source.net parameters necessary for MC3 method: 
+        ## Marginal likelihood P(D|G) using ln(BGe score):
+        candidate.net$BGe <-BGe_score(adjacency_matrix = candidate.net$adjacency, omics = omics, layers_def = layers_def, parent_set_combinations = parent_set_combinations, BGe_score_all_configs_node = BGe_score_all_configs_node)
+        candidate.net$nbhd.size <- neighborhood_size(net = candidate.net$adjacency, layers_def = layers_def, B_prior_mat = B_prior_mat, omics = omics)
+        ## Prior probability
+        candidate.net$energy <- sum(epsilon(net = candidate.net$adjacency, B_prior_mat = B_prior_mat))
+        # partition_func_UB is already log transformed
+        # the output of this function is also log transformed (natural logarithm)!
+        candidate.net$prior <- (-beta.source$value*candidate.net$energy) - sim_init_fork$partition_func_UB_beta_source
+        candidate.net$likelihood_part <- candidate.net$BGe + candidate.net$prior
+        
+        u <- log(runif(1))
+        
+        if (u < sim_init_fork$acceptance_saved[i])
+        {
+          source.net <- candidate.net
+        } # end if (u < acceptance_saved[i])
+        sim_init_fork$nets[[i]] <- source.net
+      } # end if else (sim_init_fork$method_choice_saved[i]=="MC3")
+      if(i==last)
+      {
+        sim_init_fork$cpdags[[length(sim_init_fork$cpdags)+1]] <- empty.graph(rownames(sim_init_fork$nets[[i]]$adjacency))
+        amat(sim_init_fork$cpdags[[length(sim_init_fork$cpdags)]]) <- sim_init_fork$nets[[i]]$adjacency
+        sim_init_fork$cpdags[[length(sim_init_fork$cpdags)]] <- cpdag(sim_init_fork$cpdags[[length(sim_init_fork$cpdags)]])
+      } # end if(i==last)
+    } # end for (i in first:last)
+    sim_init_fork$nets[[i]]$BGe <- BGe_score(adjacency_matrix =sim_init_fork$nets[[i]]$adjacency, omics = omics, layers_def = layers_def, parent_set_combinations = parent_set_combinations, BGe_score_all_configs_node = BGe_score_all_configs_node)
+    sim_init_fork$nets[[i]]$likelihood_part <-sim_init_fork$nets[[i]]$BGe + sim_init_fork$nets[[i]]$prior
+    sim_init_forks[[j]] <- sim_init_fork
+  } # end foreach
+  # choose the simulation path with the highest BGe and prior sum (considering the last network from the simulation path)
+  sim_init <-sim_init_forks[[which.max(mapply(sim_init_forks,FUN=function(list) list$nets[[length(list$nets)]]$likelihood_part))]]
   return(sim_init)
 }
 
@@ -638,23 +666,36 @@ mcmc.simulation_sampling.phase <- function(first, last, sim_init, prob_mbr, B_pr
 #' @description
 #' `sampling_phase` Now we apply 2 MCMC simulations and check the RMS value. After the burn-in period, we discard the values from the first half of this phase.
 #' @export
-sampling_phase <- function(second.adapt.phase_net, seed1, seed2, omics, layers_def, prob_mbr, thin, minseglen, burn_in) 
+sampling_phase <- function(second.adapt.phase_net, seed1, seed2, omics, layers_def, prob_mbr, thin, minseglen, burn_in, annot) 
 {
+  init.net_sampling <- init.net.mcmc(omics = omics, seed = seed1, layers_def = layers_def, B_prior_mat = second.adapt.phase_net$B_prior_mat_weighted)
+  init.net_sampling <- source_net_def(init.net.mcmc.output = init.net_sampling, 
+                                      omics = omics, 
+                                      parent_set_combinations = second.adapt.phase_net$partition_func_UB$parents_set_combinations,
+                                      BGe_score_all_configs_node = second.adapt.phase_net$partition_func_UB$BGe_score_all_configs_node,
+                                      B_prior_mat = second.adapt.phase_net$B_prior_mat_weighted,
+                                      layers_def = layers_def,
+                                      energy_all_configs_node = second.adapt.phase_net$partition_func_UB$energy_all_configs_node,
+                                      len = tail(second.adapt.phase_net$betas,1)[[1]][["len"]])
+  init.net_sampling$seed <- seed1
+  
   rms <- c()
   seeds_res <- list(seed1=list(),seed2=list())
-  # seed1 network is the last one from the 2nd adaption phase
+  # seed2 network is random
   seeds_res$seed1$nets <- tail(second.adapt.phase_net$nets,1)
-  seeds_res$seed1$nets[[1]]$nbhd.size <- neighborhood_size(net = seeds_res$seed1$nets[[1]]$adjacency, layers_def = layers_def, B_prior_mat = second.adapt.phase_net$B_prior_mat_weighted, omics = omics)
-  seeds_res$seed1$nets[[1]]$proposal.distr <- c()
   seeds_res$seed1$betas <- tail(second.adapt.phase_net$betas,1)
-  seeds_res$seed1$betas[[1]]$prior <- seeds_res$seed1$nets[[1]]$prior
   seeds_res$seed1$partition_func_UB_beta_source <- second.adapt.phase_net$partition_func_UB_beta_source
+  seeds_res$seed1$nets[[1]]$adjacency <- init.net_sampling$source.net$adjacency
+  seeds_res$seed1$nets[[1]]$nbhd.size <- neighborhood_size(net = seeds_res$seed1$nets[[1]]$adjacency, layers_def = layers_def, B_prior_mat = second.adapt.phase_net$B_prior_mat_weighted, omics = omics)
   seeds_res$seed1$nets[[1]]$energy <- sum(epsilon(net = seeds_res$seed1$nets[[1]]$adjacency, B_prior_mat = second.adapt.phase_net$B_prior_mat_weighted))
-  seeds_res$seed1$nets[[1]]$prior <- ((-seeds_res$seed1$betas[[1]]$value)*seeds_res$seed1$nets[[1]]$energy) - seeds_res$seed1$partition_func_UB_beta_source
+  seeds_res$seed1$nets[[1]]$prior <- (-seeds_res$seed1$betas[[1]]$value*seeds_res$seed1$nets[[1]]$energy) - seeds_res$seed1$partition_func_UB_beta_source
+  seeds_res$seed1$nets[[1]]$BGe <- BGe_score(adjacency_matrix = seeds_res$seed1$nets[[1]]$adjacency, omics = omics, layers_def = layers_def, parent_set_combinations = second.adapt.phase_net$partition_func_UB$parents_set_combinations, BGe_score_all_configs_node = second.adapt.phase_net$partition_func_UB$BGe_score_all_configs_node)
   seeds_res$seed1$nets[[1]]$likelihood_part <- seeds_res$seed1$nets[[1]]$BGe + seeds_res$seed1$nets[[1]]$prior
-  seeds_res$seed2$nets[[1]]$likelihood <- c()
-  seeds_res$seed2$nets[[1]]$acceptance <- c()
-  seeds_res$seed2$nets[[1]]$edge_move <- c()
+  
+  seeds_res$seed1$betas[[1]]$prior <- seeds_res$seed1$nets[[1]]$prior
+  seeds_res$seed1$seed <- seed1
+  seeds_res$seed1$nets[[1]]$proposal.distr <- c()
+  
   seeds_res$seed1$acceptance_saved <- vector("numeric")
   seeds_res$seed1$method_choice_saved <- vector("numeric")
   seeds_res$seed1$layers <- second.adapt.phase_net$layers
@@ -686,7 +727,8 @@ sampling_phase <- function(second.adapt.phase_net, seed1, seed2, omics, layers_d
                                                                                   len = seeds_res$seed1$betas[[1]]$len, 
                                                                                   counting = counting,
                                                                                   thin = thin,
-                                                                                  energy_all_configs_node = second.adapt.phase_net$partition_func_UB$energy_all_configs_node))
+                                                                                  energy_all_configs_node = second.adapt.phase_net$partition_func_UB$energy_all_configs_node,
+                                                                                  annot = annot))
   
   # remove duplicated cpdags
   cpdags1 <- mcmc_sim_part_res$seed1$cpdags
@@ -716,7 +758,8 @@ sampling_phase <- function(second.adapt.phase_net, seed1, seed2, omics, layers_d
                                                                           len = seeds_res$seed1$betas[[1]]$len, 
                                                                           counting = counting,
                                                                           thin = thin,
-                                                                          energy_all_configs_node = second.adapt.phase_net$partition_func_UB$energy_all_configs_node))
+                                                                          energy_all_configs_node = second.adapt.phase_net$partition_func_UB$energy_all_configs_node,
+                                                                          annot = annot))
     # remove duplicated cpdags
     cpdags1 <- unique(mcmc_sim_part_res$seed1$cpdags)
     cpdags2 <- unique(mcmc_sim_part_res$seed2$cpdags)
@@ -748,7 +791,8 @@ sampling_phase <- function(second.adapt.phase_net, seed1, seed2, omics, layers_d
                                                                           len = seeds_res$seed1$betas[[1]]$len,
                                                                           counting = counting,
                                                                           thin = thin,
-                                                                          energy_all_configs_node = second.adapt.phase_net$partition_func_UB$energy_all_configs_node))
+                                                                          energy_all_configs_node = second.adapt.phase_net$partition_func_UB$energy_all_configs_node,
+                                                                          annot = annot))
     # remove duplicated cpdags
     cpdags1 <- unique(mcmc_sim_part_res$seed1$cpdags)
     cpdags2 <- unique(mcmc_sim_part_res$seed2$cpdags)
@@ -786,7 +830,7 @@ squared_jumping <- function(second.adapt.phase_net, constant, beta_sd, fin, B_pr
     if(second.adapt.phase_net$method_choice_saved[i]=="MC3")
     {
       ### candidate.net definition: 
-      candidate.net <- MC3(source_net_adjacency = source.net$adjacency,
+      candidate.net <- MC3(source_net = source.net,
                            layers_def =  layers_def, 
                            B_prior_mat = B_prior_mat, 
                            beta.source = beta.source, 
@@ -906,7 +950,7 @@ variance_target <- function(transient.phase_net, constant, fin, B_prior_mat, omi
   start <- length(transient.phase_net$nets)
 
   
-  # We employ a standard MCMC algorithm with proposals determined by the 1st adaption/transient/2nd adaption phase.
+  # We employ a standard MCMC algorithm with proposals determined by the 1st adaption/transient/ 2nd adaption phase.
   # Check if the acceptance rate is too low (less than 0.02)
   for(i in (start+1):(start+fin))
   {
@@ -915,7 +959,7 @@ variance_target <- function(transient.phase_net, constant, fin, B_prior_mat, omi
     if(transient.phase_net$method_choice_saved[i]=="MC3")
     {
       ### candidate.net definition: 
-      candidate.net <- MC3(source_net_adjacency = source.net$adjacency,
+      candidate.net <- MC3(source_net = source.net,
                            B_prior_mat = B_prior_mat, 
                            beta.source = beta.source, 
                            partition_func_UB_beta_source = transient.phase_net$partition_func_UB_beta_source, 
@@ -933,7 +977,7 @@ variance_target <- function(transient.phase_net, constant, fin, B_prior_mat, omi
       source.net$likelihood <- source.net$likelihood_part + candidate.net$proposal.distr
       transient.phase_net$acceptance_saved[i] <- candidate.net$likelihood - source.net$likelihood
       
-      candidate_edge <- which(candidate.net$adjacency!=source.net$adjacency, arr.ind = TRUE)
+      #?? candidate_edge <- which(candidate.net$adjacency!=source.net$adjacency, arr.ind = TRUE)
      
       u <- log(runif(1))
       if (u < transient.phase_net$acceptance_saved[i])
