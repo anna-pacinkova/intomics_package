@@ -37,17 +37,24 @@ We choose the set of 8 genes from the [KEGG Colorectal cancer pathway](https://w
 
 ## Part 1: Input data
 ```ruby
+library(IntOMICS)
 # load required libraries
-library(knitr)
-library(bestNormalize)
-library(foreach)
 library(bnlearn)
-library(RColorBrewer)
-library(png) 
-library(matrixStats)
-library(igraph)
-library(ggraph)
 library(bnstruct)
+library(rlist)
+library(matrixStats)
+library(parallel)
+library(ggraph)
+library(dplyr)
+library(sm)
+library(tibble)
+library(RColorBrewer)
+library(rstatix)
+library(gridExtra)
+library(bestNormalize)
+library(igraph)
+library(colorspace)
+library(gplots)
 ```
 
 IntOMICS framework takes as input:  
