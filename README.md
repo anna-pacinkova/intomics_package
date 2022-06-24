@@ -9,9 +9,12 @@ Regulatory networks derived from IntOMICS provide deeper insights into the compl
 IntOMICS is a powerful resource for exploratory systems biology and can provide valuable insights into the complex mechanisms of biological processes 
 that has a vital role in personalised medicine.
 
-IntOMICS takes as input (i) gene expression matrix GE with m samples and n1 genes, (ii) associated copy number variation matrix CNV (m x n2), 
-(iii) associated DNA methylation matrix of beta-values METH (m x n3) sampled from the same individuals, and (iv) the biological prior knowledge 
-with information on known interactions among molecular features. 
+IntOMICS takes as input: 
+* gene expression matrix GE with m samples and n1 genes, 
+* associated copy number variation matrix CNV (m x n2), 
+* associated DNA methylation matrix of beta-values METH (m x n3) sampled from the same individuals, and 
+* the biological prior knowledge with information on known interactions among molecular features. 
+
 The resulting regulatory network structure contains the edge weights $w_i$ representing the empirical frequency of given edge over samples of network structures from two independent MCMC simulations.
 
 <p align="center">
