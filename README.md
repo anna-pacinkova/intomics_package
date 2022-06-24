@@ -11,7 +11,7 @@ that has a vital role in personalised medicine.
 
 IntOMICS takes as input: 
 * gene expression matrix, 
-* associated copy number variation matrix, 
+* associated copy number variation matrix sampled from the same individuals, 
 * associated DNA methylation matrix of beta-values sampled from the same individuals, and 
 * the biological prior knowledge with information on known interactions among molecular features. 
 
