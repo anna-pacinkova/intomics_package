@@ -75,7 +75,7 @@ IntOMICS framework takes as input:
 
 All data matrices are sampled from the same individuals.  
 
-Available omics data saved in a names list ```omics``` in the example TCGA COAD MSI dataset are gene expression (GE) of 7 genes + copy number variation (CNV) of 7 genes + beta value of 115 DNA methylation (METH) probes:
+Available omics data saved in a names list ```omics``` in the example TCGA COAD MSI dataset are gene expression (GE) of 8 genes + copy number variation (CNV) of 8 genes + beta value of 115 DNA methylation (METH) probes:
 ```ruby
 omics$ge[1:5,1:5]
 ```
