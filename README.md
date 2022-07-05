@@ -189,7 +189,7 @@ We also need to define all possible parent set configurations for each node.  Fo
 These functionalities are available through the ```OMICS_module``` function.  
 We can use linear regression to filter irrelevant DNA methylation probes. We set the parameter "lm_METH = TRUE".
 We can also specify the threshold for the R^2 to choose DNA methylation probes with significant coefficient using argument "r_squared_thres" (default = 0.3), or p-value using "p_val_thres" (default = 0.05).  
-There are several other arguments: "woPKGE_belief" (default = 0.5) refers to the belief concerning GE-GE interactions without prior knowledge, "nonGE_belief" (default = 0.5) refers to the belief concerning the belief concerning interactions of features except GE (e.g. CNV-GE, METH-GE), "TFBS_belief" refers to the belief concerning the TF and its target interaction (default = 0.75).
+There are several other arguments: "woPKGE_belief" (default = 0.5) refers to the belief concerning GE-GE interactions without prior knowledge, "nonGE_belief" (default = 0.5) refers to the belief concerning interactions of features except GE (e.g. CNV-GE, METH-GE), "TFBS_belief" refers to the belief concerning the TF and its target interaction (default = 0.75).
 Note that all interactions with belief equal to "woPKGE_belief" in biological prior knowledge will be updated in empirical biological knowledge.
 
 ```ruby
