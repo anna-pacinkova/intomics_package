@@ -299,6 +299,7 @@ res_weighted <- trace_plots(mcmc_res = BN_mod_res,
 We can plot the resulting regulatory network inferred by IntOMICS using ```ggraph``` function from the [ggraph](https://github.com/thomasp85/ggraph) package:
 
 ```ruby
+library(ggraph)
 ggraph(res_weighted$net_weighted, layout = 'dh') + 
   geom_edge_link(aes(end_cap = circle(node2.degree + 7, "pt"), edge_color = edge, label = weight),
                  arrow = arrow(angle = 20, length = unit(0.1, "inches"),
