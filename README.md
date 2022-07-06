@@ -41,6 +41,7 @@ We choose the set of 8 genes from the [KEGG Colorectal cancer pathway](https://w
 ## Part 1: Input data
 ```ruby
 library(IntOMICS)
+data(list=c("BN_mod_res", "PK", "TFtarg_mat", "annot", "gene_annot", "layers_def", "omics"), package="IntOMICS")
 # load required libraries
 library(bnlearn)
 library(bnstruct)
