@@ -228,7 +228,6 @@ $\beta = 0$,
 Now, we can use the automatically tuned MCMC algorithm ([Yang and Rosenthal, 2017](http://probability.ca/jeff/ftpdir/jinyoung1.pdf)) to estimate model parameters and empirical biological knowledge and the conventional MCMC algorithm with additional Markov blanket resampling step ([Su and Borsuk, 2016](https://jmlr.org/papers/volume17/su16a/su16a.pdf)) to infer regulatory network structure consisting of three types of nodes: GE, CNV and METH nodes.
 We can specify the minimal length of burn-in period of the MCMC simulation using the "burn_in" parameter.
 Thinning of the resulting set of networks is given by the "thin" parameter.
-"seed1" and "seed2" are integer vectors containing the random number generator state for random number generation in R.
 "OMICS_mod_res" is a named list; output from the ```OMICS_module``` function.
 "minsegleng" parameter indicates the minimal number of iterations with the c_rms value below the c_rms threshold  (for details see [Pacinkova \& Popovici, 2022](https://assets.researchsquare.com/files/rs-1291540/v1_covered.pdf?c=1643735189)). This is used to assess the convergence of the MCMC simulation.
 This step can be time-consuming (you can skip it and use the pre-computed result -> R object ```BN_mod_res```).
