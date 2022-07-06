@@ -193,7 +193,6 @@ There are several other arguments: "woPKGE_belief" (default = 0.5) refers to the
 Note that all interactions with belief equal to "woPKGE_belief" in biological prior knowledge will be updated in empirical biological knowledge.
 
 ```ruby
-set.seed(100)
 OMICS_mod_res <- OMICS_module(omics = omics, 
                               PK = PK, 
                               layers_def = layers_def, 
@@ -234,10 +233,9 @@ Thinning of the resulting set of networks is given by the "thin" parameter.
 "minsegleng" parameter indicates the minimal number of iterations with the c_rms value below the c_rms threshold  (for details see [Pacinkova \& Popovici, 2022](https://assets.researchsquare.com/files/rs-1291540/v1_covered.pdf?c=1643735189)). This is used to assess the convergence of the MCMC simulation.
 This step can be time-consuming (you can skip it and use the pre-computed result -> R object ```BN_mod_res```).
 ```ruby
+set.seed(111)
 BN_mod_res <- BN_module(burn_in = 100000, 
                         thin = 500, 
-                        seed1 = 101,
-                        seed2 = 505,
                         OMICS_mod_res = OMICS_mod_res,
                         minseglen = 50000)
 ```
