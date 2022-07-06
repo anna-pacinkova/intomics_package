@@ -193,6 +193,7 @@ There are several other arguments: "woPKGE_belief" (default = 0.5) refers to the
 Note that all interactions with belief equal to "woPKGE_belief" in biological prior knowledge will be updated in empirical biological knowledge.
 
 ```ruby
+set.seed(100)
 OMICS_mod_res <- OMICS_module(omics = omics, 
                               PK = PK, 
                               layers_def = layers_def, 
